@@ -235,9 +235,7 @@ plt.bar(tag_ranks, tag_counts, width, color="blue")
     <Container object of 388 artists>
 
 
-
-
-![png](/p3/output_34_1.png)
+![output_34_1](https://user-images.githubusercontent.com/24623272/28073902-c96f5818-6689-11e7-9418-66c1fbbc176f.png)
 
 
 #### Top 10 tags with the highest frequency
