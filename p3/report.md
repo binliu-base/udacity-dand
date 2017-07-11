@@ -61,6 +61,10 @@ street_abbrev_mapping  = {
     正云路 Zhengyun Rd => 正云路 Zhengyun Road
     
 
+#### Benefits of improve and expectations of the problem
+
+This updated all substrings in problematic address strings, such that: “比亚迪路 Biyadi Rd” becomes: “比亚迪路 Biyadi Road”.
+
 ### Pinyin spelling of Chinese Words
 
 Pinyin spelling of chinese words is an interesting case. Often times, the chinese pinyin of a word is written in the english street name. For example "南山大道 Nanshan Dadao" instead of "南山大道 Nanshan Avenue ",  both street name "Nanshan" and street type "Dadao" are using pinyin word.(see http://wiki.openstreetmap.org/wiki/WikiProject_China#Generics_in_Chinese).
@@ -96,6 +100,10 @@ pinyin_mapping = {
     桃园路 Taoyuan Lu => 桃园路 Taoyuan Road
     
 
+#### Benefits of improve and expectations of the problem
+
+This update making the name of the street type more consistent and comply with international practice. The better solution is create a coding or data standards, very good implementation of data standards when user input data. The potential problem is the lack of flexibility, and the ability to combat users who are unfamiliar with the new system.
+
 ### Inconsist city name
 
 City name (addr:city) is inconsist, sometime is chinese ("深圳市","广东省深圳市"), sometime is pinyin word (“Shenzhen""). 
@@ -113,7 +121,11 @@ I solved the problem by using a mapping dictionay to map pinyin word to a unifie
     Shenzhen City => 深圳 Shenzhen
     
 
-## 2.  Data Overview
+#### Benefits of improve and expectations of the problem
+
+This update making the field of city name more consistent, which make the subsequent data analysis more convenient. But a potential problem is lost some information, for example "深圳市宝安区" become "深圳 Shenzhen". Optional workaround is increase a new key "(addr:district") and save the information "宝安区" with it.
+
+## 2.  Data Overview and Additional Ideas
 
 ### File sizes
 
@@ -158,6 +170,15 @@ jc86035,7249
 ch40s,7173
 eversone,6765
 ssheldonss,6487
+
+The user's contribution presents a very serious tilt. A small number of users contribute the majority of map information. Here, there are some statistical information about user contributions:
+
+Top user contribution percentage ("MarsmanRom") 23.34%    
+Combined top 2 users' contribution ("MarsmanRom" and "hlaw") 39.66%     
+Combined Top 10 users contribution 61.45%      
+Combined number of users making up only 1% of posts 681 (about 97.28% of all users)    
+
+Observing these user percentages,  I’m reminded of "gamiﬁcation" and "pay mechanism" as a motivating force for contribution like Foursquare. From the game theory, the use of a mechanism called doubled or zero. Use this pay mechanism, Users can rate venues by answering questions, then give a reward for a valid answer. This can effectively reduce the data mark error rate, improve data quality.
 
 ## 3. Additional Data Exploration
 
@@ -216,7 +237,7 @@ plt.bar(tag_ranks, tag_counts, width, color="blue")
 
 
 
-![png](output_27_1.png)
+![png](output_34_1.png)
 
 
 #### Top 10 tags with the highest frequency
