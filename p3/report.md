@@ -237,7 +237,7 @@ plt.bar(tag_ranks, tag_counts, width, color="blue")
 
 
 
-![png](output_34_1.png)
+![png](/p3/output_34_1.png)
 
 
 #### Top 10 tags with the highest frequency
