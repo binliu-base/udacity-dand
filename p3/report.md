@@ -179,6 +179,7 @@ Combined Top 10 users contribution 61.45%
 Combined number of users making up only 1% of posts 681 (about 97.28% of all users)    
 
 Observing these user percentages,  I’m reminded of "gamiﬁcation" and "pay mechanism" as a motivating force for contribution like Foursquare. From the game theory, the use of a mechanism called doubled or zero. Use this pay mechanism, Users can rate venues by answering questions, then give a reward for a valid answer. This can effectively reduce the data mark error rate, improve data quality.
+But the potential problem is "gamification" cannot drive long-term  behavioral change. the activity or behavior promoted needs to have an intrinsic value. At first, people were going out of their way to earn OpenStreetMap badges and bounty. But these rewards didn’t suffice in the longer term because once novelty wears off and the fun becomes yesterday’s news, users need additional value. just like "开心网"(www.kaixin001.com).
 
 ## 3. Additional Data Exploration
 
