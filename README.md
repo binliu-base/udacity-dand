@@ -7,5 +7,12 @@ Choose any area of the world in https://www.openstreetmap.org and use data mungi
 
 [Link to report](/p3/report.md)
 
-[Link to review]
+[Link to review](https://review.udacity.com/#!/reviews/607181)
 
+### P4: Explore and Summarize Data
+
+Use R and apply exploratory data analysis techniques to explore a selected data set for distributions, outliers, and anomalies.
+
+[Link to 1st half of report]
+
+[Link to review]
