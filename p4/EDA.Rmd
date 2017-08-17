@@ -1,0 +1,191 @@
+Exploratory Analysis of Prosper.com Loans
+========================================================
+#### Bin Liu
+#### Udacity Data Analyst Nanodegree Project 4
+
+In this report, we will use R and apply exploratory data analysis techniques to explore a selected data set for distributions, outliers, and anomalies. In this analysis we want to answer the following questions:
+
+Univariate analysis
+* What are the characteristics of the Prosper company?
+* What are the characteristics of the loan (loan amount, term, etc.)?
+* What are the characteristics of the customer (lenders, borrowers) of the company Prosper?
+
+
+Multivariate Analysis
+
+* How does Prosper assess risk?
+* Does Prosper assess risk correctly?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(tidyr)
+library(plotly)
+library(lubridate)
+library(gridExtra)
+# separate, unite
+# opts_chunk
+library(knitr)
+setwd("D:/udacity/dand/p4-local/work/dand-170817/p4")
+```
+
+```{r echo=FALSE, message=FALSE , warning=FALSE,Load_the_Data}
+# Load the Data
+pr <- read.csv("prosperLoanData.csv",sep=",")
+
+# convert to date class and drop empty time notation using lubridate
+x <- as.character(pr$LoanOriginationDate)
+pr$LoanOriginationDate <- ymd_hms(x)
+x <- as.character(pr$ListingCreationDate)
+pr$ListingCreationDate <- ymd_hms(x)
+
+# convert LoanOriginationQuarter to have the year first using tidyr pkg
+pr$LoanOriginationQuarter <- as.character(pr$LoanOriginationQuarter)
+pr <- pr %>% 
+          separate(col = LoanOriginationQuarter, 
+                   into = c("Quarters", "Year"), sep = " ") %>%
+          unite(col = LoanOriginationQuarter, Year, Quarters, sep = " ")
+
+# Rename variables that were made with parentheses
+pr <- pr %>% rename(ListingCategory = ListingCategory..numeric., 
+                            ProsperRating = ProsperRating..numeric.,
+                            ProsperRatingCategory = ProsperRating..Alpha.)
+# Add factors to LoanType
+x <- c("Not Applicable", "Debt Consolidation", "Home Improvement",
+       "Business", "Personal Loan", "Student Use", "Auto", "Other",
+       "Baby&Adoption", "Boat", "Cosmetic Procedure", "Engagement Ring", 
+       "Green Loans", "Household Expenses", "Large Purchases",
+       "Medical/Dental", "Motorcycle", "RV", "Taxes", "Vacation", 
+       "Wedding Loans")
+pr$ListingCategory <- factor(pr$ListingCategory, 
+                                 levels = seq(0:20), labels = x)
+# Average credit score range into single value
+pr <- pr %>% 
+          mutate(CreditScore = CreditScoreRangeLower * 0.5 + 
+                               CreditScoreRangeUpper * 0.5)
+
+
+```
+
+# Univariate Plots Section
+
+The first thing I analyzed was the financial stability of Prosper business. How their business was growing and were there any ups and downs between 2005 and 2014. Let’s see how are loans distributed over the years.
+
+
+```{r echo=FALSE, Bivariate_Plots}
+# aggregate dollar originations July 2009 - Dec 2013
+# modeled on pg 74 of 2013 annual report
+originationdf <- pr %>% 
+               select(Quarter = LoanOriginationQuarter,
+                      Amount = LoanOriginalAmount) %>%
+               group_by(Quarter) %>%
+               summarise(Loans = n()/ 10 ^ 3, 
+                         Dollars = sum(Amount)/ 10 ^ 6) %>%
+               arrange(Quarter) %>%
+               filter(Quarter < "2014")
+
+ggOriginationDollars <- ggplot(originationdf, aes(x = Quarter, y = Dollars)) +
+    geom_bar(stat = "identity", fill = "green4") +
+    geom_text(aes(label = round(Dollars, 0)), vjust = -0.5, size = 4) +
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    ylab("Dollar Originations (millions)") +
+    ggtitle("Quarterly Dollar Originations through FY 2013")
+ggOriginationDollars
+```
+The chart in the annual report began in the third quarter of 2009. The period of October 15, 2008 to July 13, 2009 is known as Prosper’s Quiet Period (http://www.lendacademy.com/a-look-back-at-the-lending-club-andprosper-quiet-periods/) when they were required to suspend lending pending SEC approval. When they relaunched in July 2009, there were several changes to their lending process, so I’ll have to keep that in mind.
+
+
+```{r}
+# plot of number of originations v time
+ggOriginations <- ggplot(originationdf, aes(x = Quarter, y = Loans)) +
+    geom_bar(stat = "identity", fill = "orchid4") +
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    ylab("Originations (Thousands)") +
+    ggtitle("Quarterly Loan Originations through FY 2013")
+ggOriginations
+```
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+### What is/are the main feature(s) of interest in your dataset?
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+### Did you create any new variables from existing variables in the dataset?
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+
+
+# Bivariate Plots Section
+```{r echo=FALSE, Bivariate_Plots}
+
+```
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+### What was the strongest relationship you found?
+
+
+
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plots}
+
+```
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+### Were there any interesting or surprising interactions between features?
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+
+```
+
+### Description One
+
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+
+```
+
+### Description Two
+
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+
+```
+
+### Description Three
+
+------
+
+# Reflection
