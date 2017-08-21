@@ -3,19 +3,6 @@ Exploratory Analysis of Prosper.com Loans
 #### Bin Liu
 #### Udacity Data Analyst Nanodegree Project 4
 
-In this report, we will use R and apply exploratory data analysis techniques to explore a selected data set for distributions, outliers, and anomalies. In this analysis we want to answer the following questions:
-
-Univariate analysis
-* What are the characteristics of the Prosper company?
-* What are the characteristics of the loan (loan amount, term, etc.)?
-* What are the characteristics of the customer (lenders, borrowers) of the company Prosper?
-
-
-Multivariate Analysis
-
-* How does Prosper assess risk?
-* Does Prosper assess risk correctly?
-
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
 # Load all of the packages that you end up using
@@ -34,28 +21,28 @@ library(gridExtra)
 # separate, unite
 # opts_chunk
 library(knitr)
-setwd("D:/udacity/dand/p4-local/work/dand-170817/p4")
+setwd("D:/udacity/dand/p4-local/work/dand-170821/p4")
 ```
 
 ```{r echo=FALSE, message=FALSE , warning=FALSE,Load_the_Data}
 # Load the Data
-pr <- read.csv("prosperLoanData.csv",sep=",")
+fulldf <- read.csv("prosperLoanData.csv",sep=",")
 
 # convert to date class and drop empty time notation using lubridate
-x <- as.character(pr$LoanOriginationDate)
-pr$LoanOriginationDate <- ymd_hms(x)
-x <- as.character(pr$ListingCreationDate)
-pr$ListingCreationDate <- ymd_hms(x)
+x <- as.character(fulldf$ LoanOriginationDate)
+fulldf$LoanOriginationDate <- ymd_hms(x)
+x <- as.character(fulldf$ ListingCreationDate)
+fulldf$ListingCreationDate <- ymd_hms(x)
 
 # convert LoanOriginationQuarter to have the year first using tidyr pkg
-pr$LoanOriginationQuarter <- as.character(pr$LoanOriginationQuarter)
-pr <- pr %>% 
+fulldf$ LoanOriginationQuarter <- as.character(fulldf$ LoanOriginationQuarter)
+fulldf <- fulldf %>% 
           separate(col = LoanOriginationQuarter, 
                    into = c("Quarters", "Year"), sep = " ") %>%
           unite(col = LoanOriginationQuarter, Year, Quarters, sep = " ")
 
 # Rename variables that were made with parentheses
-pr <- pr %>% rename(ListingCategory = ListingCategory..numeric., 
+fulldf <- fulldf %>% rename(ListingCategory = ListingCategory..numeric., 
                             ProsperRating = ProsperRating..numeric.,
                             ProsperRatingCategory = ProsperRating..Alpha.)
 # Add factors to LoanType
@@ -65,10 +52,10 @@ x <- c("Not Applicable", "Debt Consolidation", "Home Improvement",
        "Green Loans", "Household Expenses", "Large Purchases",
        "Medical/Dental", "Motorcycle", "RV", "Taxes", "Vacation", 
        "Wedding Loans")
-pr$ListingCategory <- factor(pr$ListingCategory, 
+fulldf$ ListingCategory <- factor(fulldf$ ListingCategory, 
                                  levels = seq(0:20), labels = x)
 # Average credit score range into single value
-pr <- pr %>% 
+fulldf <- fulldf %>% 
           mutate(CreditScore = CreditScoreRangeLower * 0.5 + 
                                CreditScoreRangeUpper * 0.5)
 
@@ -81,9 +68,9 @@ The first thing I analyzed was the financial stability of Prosper business. How 
 
 
 ```{r echo=FALSE, Bivariate_Plots}
-# aggregate dollar originations July 2009 - Dec 2013
+# 1.  aggregate dollar originations July 2009 - Dec 2013
 # modeled on pg 74 of 2013 annual report
-originationdf <- pr %>% 
+originationdf <- fulldf %>% 
                select(Quarter = LoanOriginationQuarter,
                       Amount = LoanOriginalAmount) %>%
                group_by(Quarter) %>%
@@ -103,36 +90,296 @@ ggOriginationDollars
 ```
 The chart in the annual report began in the third quarter of 2009. The period of October 15, 2008 to July 13, 2009 is known as Prosper’s Quiet Period (http://www.lendacademy.com/a-look-back-at-the-lending-club-andprosper-quiet-periods/) when they were required to suspend lending pending SEC approval. When they relaunched in July 2009, there were several changes to their lending process, so I’ll have to keep that in mind.
 
-
 ```{r}
-# plot of number of originations v time
+#2.  plot of number of loan originations v time
 ggOriginations <- ggplot(originationdf, aes(x = Quarter, y = Loans)) +
-    geom_bar(stat = "identity", fill = "orchid4") +
+#    geom_bar(stat = "identity", fill = "orchid4") +
+    geom_bar(stat = "identity", fill = "blue4") +  
     theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
           axis.title.x = element_blank()) +
     ylab("Originations (Thousands)") +
-    ggtitle("Quarterly Loan Originations through FY 2013")
+    ggtitle("Quarterly Number of Loan Originations through FY 2013")
 ggOriginations
 ```
+
+```{r}
+summary(fulldf$ LoanStatus)
+#3.  create a new variable summarizing the result of each loan
+fulldf <- fulldf %>% mutate(Results = ifelse(LoanStatus %in% 
+                     c("Cancelled", "Chargedoff", "Defaulted"), 0,
+                     ifelse(LoanStatus %in% 
+                     c("Completed", "Current", "FinalPaymentInProgress"), 2, 
+                     1)))
+fulldf$ Results <- factor(fulldf$ Results, levels = 0:2, 
+                         labels = c("Defaulted", "Past Due", "Current or Paid"))
+
+defaultsdf <- fulldf %>% group_by(Quarter = LoanOriginationQuarter, Results) %>%
+            summarize(Loans = n() / 10 ^ 3) %>% 
+            arrange(Quarter, Results) %>%
+            filter(Quarter < "2014")
+
+ggDefaults <- ggplot(defaultsdf, aes(x = Quarter, y = Loans, fill = Results)) +
+    geom_bar(stat = "identity") +
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    ylab("Originations (Thousands)") +
+    ggtitle("Results of Loans Originated through FY 2013")
+ggDefaults
+```
+
+
+**What is the most frequent Term of loan?**
+```{r}
+## 4.  Most common term loan
+fulldf$ Term<-factor(fulldf$ Term)
+ggplot(data=fulldf,aes(Term)) + 
+  geom_bar(color=I('black'),fill=I('blue4'),stat = "count", width = 0.3) + 
+ 
+  ggtitle("The length of the loan in months")
+```
+
+```{r}
+## 5.  
+defaultersdf <- fulldf %>% group_by(ProsperRatingCategory, Results) %>%
+                summarize(Loans = n() / 10 ^ 3) %>%
+                arrange(ProsperRatingCategory)
+
+defaultersdf$ProsperRatingCategory <- ordered(defaultersdf$ProsperRatingCategory, levels = c("AA",
+                     "A", "B", "C", "D","E","HR","N/A"))
+
+ggWhoDefaults <- ggplot(defaultersdf, aes(x = ProsperRatingCategory, y = Loans,
+                                          fill = Results)) +
+                 geom_bar(stat = "identity") + 
+                 ylab("Loans (Thousands)")
+ggWhoDefaults
+```
+
+**Why people use Prosper?**
+```{r}
+## 5.
+qplot(ListingCategory, data = fulldf) + 
+    theme(axis.text.x = element_text(angle = -90))
+```
+
+**What's the borrower's credit score?**
+
+```{r  warning=FALSE}
+## 6.
+x <- qplot(CreditScore, data = fulldf, xlim = c(300, 850))
+suppressMessages(print(x))
+```
+
+Credit scores range from 300 to 850.  Prosper borrower have a median score of `r median(fulldf$CreditScore)`, which is considered good credit.  Prosper now requires a minimum credit score of 640 for new borrowers or 600 for returning borrowers, but initially, subprime borrowers could also apply for loans.
+
+
+**How much people are borrowing?**
+
+```{r echo=FALSE, "How much people are borrowing"}
+## 7.
+ggplot(aes(x = LoanOriginalAmount), data = fulldf) + 
+  geom_histogram(binwidth=500, color='black') +
+  ggtitle("Histogram of Loan Original Amount") +
+  xlab("Loan Original Amount")
+
+summary(fulldf$LoanOriginalAmount)
+```
+
+**How much borrowers earn annually?**
+
+```{r}
+## 8.
+fulldf$IncomeRange <- ordered(fulldf$IncomeRange, levels = c("Not displayed",
+                     "Not employed", "$0", "$1-24,999", "$25,000-49,999", 
+                      "$50,000-74,999", "$75,000-99,999", "$100,000+"))
+
+qplot(IncomeRange, data = fulldf) + 
+    theme(axis.text.x = element_text(angle = -90))
+```
+**What's the distribution of Monthly Loan Payment**
+
+```{r echo=FALSE}
+## 9.
+ggplot(aes(x = MonthlyLoanPayment), data = fulldf) + 
+  geom_histogram(fill = "#ABADA6", color='black', binwidth = 10) +
+  ggtitle("Histogram of Monthly Loan Payment") +
+  xlab("Monthly Loan Payment")
+
+summary(fulldf$MonthlyLoanPayment)
+
+## 10.
+ggplot(aes(x = sqrt(MonthlyLoanPayment)), data = fulldf) + 
+  geom_histogram(fill = "#ABADA6", color='black', binwidth = 1) +
+  ggtitle("Histogram of (sqrt) Monthly Loan Payment") +
+  xlab("sqrt(Monthly Loan Payment)")
+```
+
+**How the Debt to Income is distributed?**
+
+```{r echo=FALSE, "How the Debt to Income is distributed"}
+## 11.
+ggplot(aes(x = DebtToIncomeRatio), 
+       data = subset(fulldf, DebtToIncomeRatio < 1)) + 
+  geom_histogram(fill = "#ABADA6", color='black', binwidth = 0.01) +
+  ggtitle("Histogram of Debt To Income Ratio") +
+  xlab("Debt To Income Ratio")
+
+summary(fulldf$DebtToIncomeRatio)
+```
+
+**How lenders benefit from investing in loans?**
+
+```{r echo=FALSE, "The Lender Yield on the Loan"}
+summary(fulldf$LenderYield)
+
+## 12.
+ggplot(aes(x=LenderYield), data=fulldf) + 
+    geom_histogram(binwidth=0.005, fill = "#ABADA6", color='black') +
+    scale_x_continuous(breaks=seq(0, 0.5, 0.05)) + 
+    labs(title="The Lender Yield on the Loan") +
+    xlab("Lender Yield")
+```
+
 
 # Univariate Analysis
 
 ### What is the structure of your dataset?
+    
+The ProsperLoan dataset contains `r nrow(fulldf)` loans and 81 variables. The loans cover the period `r range(fulldf$LoanOriginationDate)`.  Variables are of classes int, numeric, date, and factor.
 
 ### What is/are the main feature(s) of interest in your dataset?
+There are two domain in the ProsperLoan model. Domain one is company domain (one role: Prosper), Domain two is customer domain (tow role: Investor and borrower).
+
+As a business, Prosper would be most concerned with LP_ServiceFees and LP_CollectionFees, which form their primary revenue source.
+
+The main feature of the borrowers is ProsperRating, which is based on their credit score and history with Prosper loans.
+
+For investors, the main features are the LenderYield (interest rate minus the service fee) and the LP_NetPrincipalLoss, which is the principal that remains uncollected after any recoveries.
+
 
 ### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
 
+Other variables that can help me to support my investigation are Debt To Income Ratio, Occupation, Employment Status and 
+Employment Duration.
+
+
 ### Did you create any new variables from existing variables in the dataset?
+I created two new variables, The first is CreditScore, which is average number of the CreditScoreRangeUpper and CreditScoreRangeLower variables.  Another is a factor variable Results, which simplify each loans status as "Current or Paid", "Past Due", or "Defaulted". 
 
 ### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
 
+There is a high decrease of the number of the loans between the fourth quarter of 2008 and 
+The fourth quarter of 2009. Cause is  Prosper's business model came under scrutiny by the US Securities and Exchange Commission at that time. If I was not aware of the event, this would be a unusual distributions.
 
 
 # Bivariate Plots Section
 ```{r echo=FALSE, Bivariate_Plots}
+fulldf <- fulldf %>% 
+          mutate(Rating = ordered(x = ifelse(!is.na(ProsperRating), 
+                                                    ProsperRating, 0), 
+                                  levels = 0:7, 
+                          # labels = c("N/A", "HR", "E", "D", "C", "B", "A", "AA")))
+                          labels = c("AA", "A", "B", "C", "D", "E", "HR", "N/A")))
+## 13.
+# boxplot(CreditScore ~ Rating, data = fulldf, ylim = c(600, 850))
+
+p <- ggplot(data = fulldf, aes(x = ProsperRatingCategory, y = CreditScore)) +
+        geom_boxplot() +
+        ylim(600, 850) +
+        xlab("Prosper Rating") +
+        ylab("Credit Score")
+
+p + labs(title = "Borrower's Credit Score by Prosper Rating")
+# p + labs(x = "Prosper Rating")
+# p + labs(y = "Credit Score")
+```
+
+
+```{r}
+## 14.
+# boxplot(BorrowerAPR ~ Rating, data = fulldf) 
+
+fulldf$ProsperRatingCategory <- ordered(fulldf$ProsperRatingCategory, levels = c("AA",
+                     "A", "B", "C", "D","E","HR","N/A"))
+
+p <-ggplot(data = fulldf, aes(x = ProsperRatingCategory, y = BorrowerAPR)) +
+        geom_boxplot() +
+        xlab("Prosper Rating")
+
+
+p + labs(title = "Borrower's Annual Percentage Rate (APR) by Prosper Rating")
 
 ```
+
+
+```{r}
+fulldf$ProsperRating <- ordered(fulldf$ProsperRating,
+                        labels = rev(c("HR", "E", "D", "C", "B", "A", "AA")))
+ratinglevels <- rev(c("HR", "E", "D", "C", "B", "A", "AA"))
+fulldf <- fulldf %>%
+          mutate(Rating = ifelse(ProsperRating %in% ratinglevels,
+                                 as.character(ProsperRating),
+                                 ifelse(CreditGrade %in% ratinglevels,
+                                        as.character(CreditGrade),
+                                        NA)))
+fulldf$Rating <- ordered(fulldf$Rating, labels = ratinglevels)
+catdefaultsdf <- fulldf %>%
+                 group_by(Quarter = LoanOriginationQuarter, Rating, Results) %>%
+                 summarize(Loans = n())
+# 
+# ggCatdefaults <- ggplot(data = subset(catdefaultsdf, as.numeric(Results) < 2), 
+#                         aes(x = Quarter, y = Loans, 
+#                             color = Rating, group = Rating)) +
+#                  geom_line() +
+#                  scale_colour_brewer(palette = "Reds") +
+#                  theme(axis.text.x = element_text(angle = -90, vjust = 0.5)) +
+#                  xlab("Loan Origination") +
+#                  ggtitle("Defaults for Loans Originated through FY 2013")
+# ggCatdefaults
+```
+
+```{r}
+## 15.
+catRateDefaultsdf <- fulldf %>% 
+                 group_by(Quarter = LoanOriginationQuarter, Rating, Results) %>%
+                 summarize(TotalperRating = n()) %>%
+                 mutate(Rate = TotalperRating / sum(TotalperRating)) 
+                 
+
+ggCatRateDefaults <- ggplot(data = subset(catRateDefaultsdf, 
+                                          as.numeric(Results) < 2), 
+                        aes(x = Quarter, y = Rate * 100, 
+                            color = Rating, group = Rating)) +
+                 geom_line() +
+                 theme(axis.text.x = element_text(angle = -90, vjust = 0.5)) +
+                 xlab("Loan Origination") +
+                 ylab("Rate (percentage)") +
+                 ggtitle("Default Rate by Loans Originated through FY 2013")
+ggCatRateDefaults
+```
+
+```{r}
+# 16.
+
+ggLossCat <- ggplot(data = arrange(fulldf, Results), 
+                 aes(x = Rating, 
+                     y = LP_GrossPrincipalLoss / LoanOriginalAmount)) +
+             geom_bar(stat = "summary", fun.y = mean)
+ggLossCat
+```
+
+
+```{r}
+
+# 17.
+ggLossCatTime <- ggplot(data = arrange(fulldf, Results), 
+                 aes(x = LoanOriginationQuarter, 
+                     y = LP_GrossPrincipalLoss / LoanOriginalAmount)) +
+                 geom_bar(stat = "summary", fun.y = mean) +
+                 theme(axis.text.x = element_blank()) +
+                 facet_wrap(~Rating)
+ggLossCatTime
+```
+
 
 # Bivariate Analysis
 
