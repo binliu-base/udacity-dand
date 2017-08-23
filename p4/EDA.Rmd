@@ -24,7 +24,7 @@ library(knitr)
 setwd("D:/udacity/dand/p4-local/work/dand-170822/p4")
 ```
 
-```{r cache=TRUE, LoadData}
+```{r  echo=FALSE, message=FALSE, warning=FALSE,LoadData}
 # Load the Data
 full.df <- read.csv("prosperLoanData.csv",sep=",")
 
@@ -67,8 +67,7 @@ full.df <- full.df %>%
 The first thing I analyzed was the financial stability of Prosper business. How their business was growing and were there any ups and downs between 2005 and 2014. Let’s see how are loans distributed over the years.
 
 
-# ```{r echo=FALSE, message=FALSE , warning=FALSE}
-```{r}
+```{r echo=FALSE, message=FALSE , warning=FALSE}
 # 1.  aggregate dollar originations July 2009 - Dec 2013
 # modeled on pg 74 of 2013 annual report
 originationdf <- full.df %>% 
@@ -104,22 +103,24 @@ ggOriginations
 ```
 
 ```{r}
-summary(full.df$ LoanStatus)
+summary(full.df$LoanStatus)
 #3.  create a new variable summarizing the result of each loan
 full.df <- full.df %>% mutate(Results = ifelse(LoanStatus %in% 
                      c("Cancelled", "Chargedoff", "Defaulted"), 0,
                      ifelse(LoanStatus %in% 
                      c("Completed", "Current", "FinalPaymentInProgress"), 2, 
                      1)))
-full.df$ Results <- factor(full.df$ Results, levels = 0:2, 
+results.df <- full.df
+
+results.df$Results <- factor(results.df$ Results, levels = 0:2, 
                          labels = c("Defaulted", "Past Due", "Current or Paid"))
 
-defaultsdf <- full.df %>% group_by(Quarter = LoanOriginationQuarter, Results) %>%
+results.df <- results.df %>% group_by(Quarter = LoanOriginationQuarter, Results) %>%
             summarize(Loans = n() / 10 ^ 3) %>% 
             arrange(Quarter, Results) %>%
             filter(Quarter < "2014")
 
-ggDefaults <- ggplot(defaultsdf, aes(x = Quarter, y = Loans, fill = Results)) +
+ggDefaults <- ggplot(results.df, aes(x = Quarter, y = Loans, fill = Results)) +
     geom_bar(stat = "identity") +
     theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
           axis.title.x = element_blank()) +
@@ -142,19 +143,25 @@ ggplot(data=term.df,aes(Term)) +
 
 ```{r}
 ## 5.  
-defaultersdf <- full.df %>% group_by(ProsperRatingCategory, Results) %>%
+defaulted.df <- full.df
+
+defaulted.df$ Results <- factor(defaulted.df$ Results, levels = 0:2, 
+                         labels = c("Defaulted", "Past Due", "Current or Paid"))
+
+defaulted.df <- defaulted.df %>% group_by(ProsperRatingCategory, Results) %>%
                 summarize(Loans = n() / 10 ^ 3) %>%
                 arrange(ProsperRatingCategory)
 
-defaultersdf$ProsperRatingCategory <- ordered(defaultersdf$ProsperRatingCategory, levels = c("AA",
+defaulted.df$ProsperRatingCategory <- ordered(defaulted.df$ProsperRatingCategory, levels = c("AA",
                      "A", "B", "C", "D","E","HR","N/A"))
 
-ggWhoDefaults <- ggplot(defaultersdf, aes(x = ProsperRatingCategory, y = Loans,
+ggWhoDefaults <- ggplot(defaulted.df, aes(x = ProsperRatingCategory, y = Loans,
                                           fill = Results)) +
                  geom_bar(stat = "identity") + 
                  ylab("Loans (Thousands)")
 ggWhoDefaults
 ```
+
 
 **Why people use Prosper?**
 ```{r}
@@ -278,19 +285,19 @@ The fourth quarter of 2009. Cause is  Prosper's business model came under scruti
 full.df <- full.df %>% 
           mutate(Rating = ordered(x = ifelse(!is.na(ProsperRating), 
                                                     ProsperRating, 0), 
-                                  levels = 0:7, 
+                                  levels = 7:0, 
                           # labels = c("N/A", "HR", "E", "D", "C", "B", "A", "AA")))
                           labels = c("AA", "A", "B", "C", "D", "E", "HR", "N/A")))
 ## 13.
-# boxplot(CreditScore ~ Rating, data = full.df, ylim = c(600, 850))
+boxplot(CreditScore ~ Rating, data = full.df, ylim = c(600, 850))
 
-p <- ggplot(data = full.df, aes(x = ProsperRatingCategory, y = CreditScore)) +
-        geom_boxplot() +
-        ylim(600, 850) +
-        xlab("Prosper Rating") +
-        ylab("Credit Score")
-
-p + labs(title = "Borrower's Credit Score by Prosper Rating")
+# p <- ggplot(data = full.df, aes(x = ProsperRatingCategory, y = CreditScore)) +
+#         geom_boxplot() +
+#         ylim(600, 850) +
+#         xlab("Prosper Rating") +
+#         ylab("Credit Score")
+# 
+# p + labs(title = "Borrower's Credit Score by Prosper Rating")
 # p + labs(x = "Prosper Rating")
 # p + labs(y = "Credit Score")
 ```
@@ -442,28 +449,99 @@ ggplot(loans2, aes(LoanOriginationDate, InvestorProfitRate)) +
     geom_smooth(method = lm)
 ```
 
+### Correlation matrix
+
+```{r fig.width=10, fig.height=10, echo=FALSE}
+#Let's select only the variables of interest.
+# 21.
+iov_all <- c( "Results","CreditScore","BorrowerAPR","StatedMonthlyIncome","InvestorProfit",
+                          "LoanOriginalAmount","LoanOriginationDate")
+
+loan2_column_select <- loans2[,iov_all]
+loan2_column_select<-na.omit(loan2_column_select)
+
+ggpairs(loan2_column_select)
+```
+
+ 
 # Bivariate Analysis
 
-### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+#### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+Investor profits depend on defaults (Results 0.596) and  interest income(BorrowerAPR -0.22).
 
-### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+Loan defaults did not have a strong correlation with any of the expected variables. The largest correlations are with BorrowerAPR (-0.22) and CreditScore (-0.159).
 
-### What was the strongest relationship you found?
+LoanOriginalAmount have a strong correlation with CreditScore (0.464), BorrowerAPR (-0.274), StatedMonthlyIncome (0.286) and InvestorProfit (0.208).
+#### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+StatedMonthlyIncome(0.286) was positively correlated with the loan amount.BorrowerAPR (0.211) was correlated with LoanOriginationDate, reflecting broader changes in interest rates.
 
+#### What was the strongest relationship you found?
 
+The strongest relationship among my variables was between CreditScore and BorrowerAPR (-0.69).
 
 
 # Multivariate Plots Section
 
-```{r echo=FALSE, Multivariate_Plots}
+
+**  Loan Amount / Borrower Rate / Prosper Rating**
+
+```{r}
+start_date <- ymd("2009-07-15")
+loans <- full.df %>% 
+         mutate(InvestorProfit = LP_CustomerPayments - LoanOriginalAmount -
+                                 LP_ServiceFees - LP_CollectionFees + 
+                                 LP_NonPrincipalRecoverypayments,
+                InvestorProfitRate = InvestorProfit / LoanOriginalAmount
+                ) %>% 
+         filter(LoanStatus %in% c("Completed", "Chargedoff", "Defaulted",
+                                  "FinalPaymentInProgress")) %>% 
+         filter(LoanOriginationDate >= start_date) %>% 
+         filter(Rating != "") %>% 
+         select(Results, InvestorProfit, InvestorProfitRate, Rating,
+                LoanOriginationDate, LoanOriginationQuarter,
+                LoanOriginalAmount, BorrowerAPR, Term, ListingCategory,
+                CreditScore, RevolvingCreditBalance, 
+                AvailableBankcardCredit, StatedMonthlyIncome,IncomeRange,ProsperRating,MonthlyLoanPayment) %>% 
+         droplevels()
+```
+
+```{r echo=FALSE, "Borrower Rate vs Loan Amount vs Prosper Rating", Multivariate_Plots}
+ggplot(aes(x=BorrowerAPR, y = LoanOriginalAmount), data = loans) +
+  geom_point(alpha = 0.05) +
+  ggtitle("Loan Amount by BorrowerAPR (by Prosper Ratings)") +
+  ylab("Loan Amount") +
+  xlab("BorrowerAPR") +
+  facet_wrap(~Rating, ncol=3,  scales = "free") +
+  ylim(0, 35000)
 
 ```
+
+Loans with higher prosper rating have lower Borrower Rate. Borrowers with lower Prosper Rating usually are borrowing smaller amounts with higher rate. For better visualization I’ve used only loans created after 7/1/2009 because Prosper Rating was not available for loans before that date.
+
+
+```{r fig.width=8, fig.height=4, echo=FALSE}
+# ProsperScore was interpreted as factor. Lets convert it onto numeric.
+loans$ProsperRating=as.numeric(loans$ProsperRating)
+
+ggplot(data=subset(loans,!is.na(ProsperRating) & Term=='36'),aes(LoanOriginalAmount,MonthlyLoanPayment))+
+  geom_point(aes(color=ProsperRating),alpha=1/5) + 
+  scale_color_continuous(high="green",low="blue")
+```
+
+We observe that the variance is explained by risk, which is represented by the ProsperScore. The bottom of the scatter plot is dominated by loans with a ProsoperScore equal to 11, which represents loans with low risks. The top of the scatter plot is dominated by loans with a ProsoperScore equal to 4, which represents loans with higher risks. Loans with a loan amount higher than $25000 are mostly dominated by a ProsperScore equal or superior to 6.
 
 # Multivariate Analysis
 
 ### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
 
+* Lower borrower rates is usually related to higher credit score, higher prosper 
+score, higher prosper rating and owning home.
+* Borrowers with lower Prosper Rating usually are borrowing small amounts with 
+very high rate. 
+
+
 ### Were there any interesting or surprising interactions between features?
+I found it interesting that larger loan requests were associated with higher credit scores.
 
 ### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
 
@@ -473,22 +551,63 @@ ggplot(loans2, aes(LoanOriginationDate, InvestorProfitRate)) +
 
 ### Plot One
 ```{r echo=FALSE, Plot_One}
-
+plot1 <- ggOriginationDollars + ylab("Loan Originations (million USD)") +
+         ggtitle("Prosper Loan Marketplace History through FY 2013")
+plot1
 ```
 
 ### Description One
+Prosper Loan's business history is encoded the the dollar value of the loans originated through their online marketplace.  Prosper was the first peer-to-peer lending marketplace, opening to the public February 5, 2006[[1](https://en.wikipedia.org/wiki/Prosper_Marketplace)].  Initially, lenders bid on loans by offering competing interest rates.  Prosper's business model came under scrutiny by the US Securities and Exchange Commission, who issued a "cease and desist" letter November 24, 2008.[[2](https://www.sec.gov/litigation/admin/2008/33-8984.pdf)]   In anticipation, Prosper filed for SEC registration, which required a "quiet period" from October 15, 2008 until July 13, 2009, during which time, no new loans were originated.[[3](http://www.lendacademy.com/a-look-back-at-the-lending-club-and-prosper-quiet-periods/)]  Prosper attributes the decrease in originations at the end of 2012 to a decrease in liquidity and in January of 2013 undertook an equity financing [[4](https://www.prosper.com/Downloads/Legal/prosper10k12312013.pdf), p 74].  The increase in capital was used in part for a marketing campaign to attract more borrowers and to launch IRA accounts to attract institutional lenders.
 
 
 ### Plot Two
 ```{r echo=FALSE, Plot_Two}
-
+plot2 <- ggDefaults + ylab("Number of Loan Originations (Thousands)") +
+         scale_fill_manual(values = c("Defaulted" = "red3",
+                                       "Past Due" = "yellow", 
+                                       "Current or Paid" = "green4"))
+plot2
 ```
 
 ### Description Two
+In this plot, we switch from dollar amounts to number of new loans originated each quarter and the final disposition of those loans.  The early days of Prosper were marked by very loose lending standards.  Coupled with the global financial crisis, these early loans had very high default rates and many investors realized losses.  After Prosper's relaunch in 2009, minimum credit scores were increased and Prosper made more of an effort to verify borrower's information[[5](http://www.wsj.com/articles/SB120525138644627455)].  Prosper's prospectus makes it clear that investors should expect some loans to default[[6](https://www.prosper.com/invest/marketplace-performance/)], and charges interest rates high enough to account for risk, but lower than a borrower would get from a credit card.
+
+```{r}
+names(full.df)
+```
 
 
 ### Plot Three
-```{r echo=FALSE, Plot_Three}
+```{r echo=FALSE, message=FALSE, Plot_Three}
+plot3a <- ggplot(data = filter(full.df, Rating != "N/A") %>% droplevels(),
+                 aes(x = LoanOriginationQuarter, y = BorrowerAPR)) +
+          facet_grid(~Rating) +
+          geom_line(aes(y = 100 * LP_GrossPrincipalLoss / LoanOriginalAmount,
+                        group = 1),
+                    stat = "summary", fun.y = mean, lwd = 1) +
+          geom_line(aes(y = 100 * LP_InterestandFees / LoanOriginalAmount,
+                        group = 1),
+                    stat = "summary", fun.y = mean, color = "green4", lwd = 1) +
+          theme(axis.ticks = element_blank(), axis.text.x = element_blank()) +
+          ylab("Percentage of Origination") +
+          xlab("Quarterly Results 2006 - 2013 by Prosper Rating Category") +
+          ggtitle("Principal Lost (black) v. Interest and Fees Collected (green)")
+
+plot3b <- ggplot(data = filter(full.df, Rating != "N/A") %>% droplevels(),
+                 aes(x = LoanOriginationQuarter,
+                     y = 100* (LP_InterestandFees - LP_GrossPrincipalLoss -
+                               LP_ServiceFees - LP_CollectionFees) /
+                         LoanOriginalAmount,
+                     group = 1)) +
+          geom_line(stat = "summary", fun.y = mean, lwd = 1) +
+          geom_hline(y = 0, yintercept = 5, color = "red3") +
+          facet_grid(~Rating) +
+          theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+          ylab("Percentage") +
+          xlab("Quarterly Results 2006 - 2013 by Prosper Rating Category") +
+          ggtitle("Return on Investment (ROI) After Fees")
+grid.arrange(plot3a, plot3b, nrow = 2)
+
 
 ```
 
