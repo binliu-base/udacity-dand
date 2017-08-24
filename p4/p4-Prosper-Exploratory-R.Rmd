@@ -26,7 +26,7 @@ library(plotly)
 library(lubridate)
 library(gridExtra)
 library(knitr)
-setwd("D:/udacity/dand/p4-local/work/dand-170822/p4")
+setwd("D:/udacity/dand/p4-local/work/dand-170824/p4")
 ```
 
 ```{r  echo=FALSE, message=FALSE, warning=FALSE,LoadData}
@@ -63,130 +63,27 @@ full.df$ ListingCategory <- factor(full.df$ ListingCategory,
 full.df <- full.df %>% 
           mutate(CreditScore = CreditScoreRangeLower * 0.5 + 
                                CreditScoreRangeUpper * 0.5)
-
-
-```
-
-# Univariate Plots Section
-
-The first thing I analyzed was the financial stability of Prosper business. How their business was growing and were there any ups and downs between 2005 and 2014. Let’s see how are loans distributed over the years.
-
-
-```{r echo=FALSE, message=FALSE , warning=FALSE}
-# 1.  aggregate dollar originations July 2009 - Dec 2013
-# modeled on pg 74 of 2013 annual report
-origination.df <- full.df %>% 
-               select(Quarter = LoanOriginationQuarter,
-                      Amount = LoanOriginalAmount) %>%
-               group_by(Quarter) %>%
-               summarise(Loans = n()/ 10 ^ 3, 
-                         Dollars = sum(Amount)/ 10 ^ 6) %>%
-               arrange(Quarter) %>%
-               filter(Quarter < "2014")
-
-ggOriginationDollars <- ggplot(origination.df, aes(x = Quarter, y = Dollars)) +
-    geom_bar(stat = "identity", fill = "green4") +
-    geom_text(aes(label = round(Dollars, 0)), vjust = -0.5, size = 4) +
-    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
-          axis.title.x = element_blank()) +
-    ylab("Dollar Originations (millions)") +
-    ggtitle("Quarterly Dollar Originations through FY 2013") +
-   theme(plot.title = element_text(hjust = 0.5))
-ggOriginationDollars
-```
-
-The chart in the annual report began in the third quarter of 2009. The period of October 15, 2008 to July 13, 2009 is known as Prosper’s Quiet Period (http://www.lendacademy.com/a-look-back-at-the-lending-club-andprosper-quiet-periods/) when they were required to suspend lending pending SEC approval. When they relaunched in July 2009, there were several changes to their lending process, so I’ll have to keep that in mind.
-
-```{r echo=FALSE, message=FALSE , warning=FALSE}
-# 2.  plot of number of loan originations v time
-ggOriginations <- ggplot(origination.df, aes(x = Quarter, y = Loans)) +
-    geom_bar(stat = "identity", fill = "blue4") +  
-    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
-          axis.title.x = element_blank()) +
-    ylab("Originations (Thousands)") +
-    ggtitle("Quarterly Number of Loan Originations through FY 2013") +
-   theme(plot.title = element_text(hjust = 0.5))  
-ggOriginations
-```
-
-```{r echo=FALSE, message=FALSE , warning=FALSE}
-summary(full.df$LoanStatus)
-# 3.  create a new variable summarizing the result of each loan
+# create a new variable summarizing the result of each loan
 full.df <- full.df %>% mutate(Results = ifelse(LoanStatus %in% 
                      c("Cancelled", "Chargedoff", "Defaulted"), 0,
                      ifelse(LoanStatus %in% 
                      c("Completed", "Current", "FinalPaymentInProgress"), 2, 
                      1)))
 
-results.df <- full.df
-
-results.df$Results <- factor(results.df$ Results, levels = 0:2, 
-                         labels = c("Defaulted", "Past Due", "Current or Paid"))
-
-results.df <- results.df %>% group_by(Quarter = LoanOriginationQuarter, Results) %>%
-            summarize(Loans = n() / 10 ^ 3) %>% 
-            arrange(Quarter, Results) %>%
-            filter(Quarter < "2014")
-
-ggDefaults <- ggplot(results.df, aes(x = Quarter, y = Loans, fill = Results)) +
-    geom_bar(stat = "identity") +
-    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
-          axis.title.x = element_blank()) +
-    ylab("Originations (Thousands)") +
-    ggtitle("Results of Loans Originated through FY 2013") +
-     theme(plot.title = element_text(hjust = 0.5))
-ggDefaults
 ```
 
-Default rates were high initially, but improved with the new standards implemented after the ‘quiet period’. Default rates drop in recent quarters because those loans have had less time to enter default. Proper models defaults with curves and notes that those recent loans have default rates below expectations.
+# Univariate Plots Section
 
 #### What is the most frequent Term of loan?
 
 ```{r echo=FALSE, message=FALSE , warning=FALSE}
-## 4.  Most common term loan
 term.df <- full.df
 term.df$Term<-factor(term.df$ Term)
 ggplot(data=term.df,aes(Term)) + 
-  geom_bar(color=I('black'),fill=I('blue4'),stat = "count", width = 0.5) +  
+  geom_bar(color=I('black'),fill=I('#ABADA6'),stat = "count", width = 0.5) +  
   ggtitle("The length of the loan in months") +
      theme(plot.title = element_text(hjust = 0.5))
-
 ```
-
-```{r echo=FALSE, message=FALSE , warning=FALSE}
-## 5.  
-defaulted.df <- full.df
-
-defaulted.df$ Results <- factor(defaulted.df$ Results, levels = 0:2, 
-                         labels = c("Defaulted", "Past Due", "Current or Paid"))
-
-defaulted.df <- defaulted.df %>% group_by(ProsperRatingCategory, Results) %>%
-                summarize(Loans = n() / 10 ^ 3) %>%
-                arrange(ProsperRatingCategory)
-
-defaulted.df$ProsperRatingCategory <- ordered(defaulted.df$ProsperRatingCategory, levels = c("AA",
-                     "A", "B", "C", "D","E","HR","N/A"))
-
-ggWhoDefaults <- ggplot(defaulted.df, aes(x = ProsperRatingCategory, y = Loans,
-                                          fill = Results)) +
-                 geom_bar(stat = "identity") + 
-                 ylab("Loans (Thousands)") + 
-                  ggtitle("Loans Results by Rating") +
-                 theme(plot.title = element_text(hjust = 0.5))
-ggWhoDefaults
-```
-
-
-<!-- #### Why people use Prosper? -->
-
-```{r echo=FALSE, message=FALSE , warning=FALSE}
-## 6.
-# qplot(ListingCategory, data = full.df) + 
-#     theme(axis.text.x = element_text(angle = -90))+
-#     labs(title=" Histogram of Borrower's Listing Category") +
-#     theme(plot.title = element_text(hjust = 0.5))    
-```
-
 
 #### What's the borrower's credit score?
 
@@ -311,6 +208,48 @@ The fourth quarter of 2009. Cause is  Prosper's business model came under scruti
 
 
 # Bivariate Plots Section
+
+The first thing I analyzed was the financial stability of Prosper business. How their business was growing and were there any ups and downs between 2005 and 2014. Let’s see how are loans distributed over the years.
+
+
+```{r echo=FALSE, message=FALSE , warning=FALSE}
+# 1.  aggregate dollar originations July 2009 - Dec 2013
+# modeled on pg 74 of 2013 annual report
+origination.df <- full.df %>% 
+               select(Quarter = LoanOriginationQuarter,
+                      Amount = LoanOriginalAmount) %>%
+               group_by(Quarter) %>%
+               summarise(Loans = n()/ 10 ^ 3, 
+                         Dollars = sum(Amount)/ 10 ^ 6) %>%
+               arrange(Quarter) %>%
+               filter(Quarter < "2014")
+
+ggOriginationDollars <- ggplot(origination.df, aes(x = Quarter, y = Dollars)) +
+    geom_bar(stat = "identity", fill = "green4") +
+    geom_text(aes(label = round(Dollars, 0)), vjust = -0.5, size = 4) +
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    ylab("Dollar Originations (millions)") +
+    ggtitle("Quarterly Dollar Originations through FY 2013") +
+   theme(plot.title = element_text(hjust = 0.5))
+ggOriginationDollars
+```
+
+The chart in the annual report began in the third quarter of 2009. The period of October 15, 2008 to July 13, 2009 is known as Prosper’s Quiet Period (http://www.lendacademy.com/a-look-back-at-the-lending-club-andprosper-quiet-periods/) when they were required to suspend lending pending SEC approval. When they relaunched in July 2009, there were several changes to their lending process, so I’ll have to keep that in mind.
+
+```{r echo=FALSE, message=FALSE , warning=FALSE}
+# 2.  plot of number of loan originations v time
+ggOriginations <- ggplot(origination.df, aes(x = Quarter, y = Loans)) +
+    geom_bar(stat = "identity", fill = "blue4") +  
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    ylab("Originations (Thousands)") +
+    ggtitle("Quarterly Number of Loan Originations through FY 2013") +
+   theme(plot.title = element_text(hjust = 0.5))  
+ggOriginations
+```
+
+
 ```{r echo=FALSE, message=FALSE , warning=FALSE}
 full.df <- full.df %>% 
           mutate(Rating = ordered(x = ifelse(!is.na(ProsperRating), 
@@ -376,12 +315,13 @@ ggCatRateDefaults <- ggplot(data = subset(catRateDefaultsdf,
                  xlab("Loan Origination") +
                  ylab("Rate (percentage)") +
                  ggtitle("Default Rate by Loans Originated through FY 2013")+
-      theme(plot.title = element_text(hjust = 0.5)) 
+                 theme(plot.title = element_text(hjust = 0.5)) +
+                 scale_color_brewer(palette = "Blues")
 ggCatRateDefaults
 ```
 
 Default rates track roughly with the risk categories. Default rates are much higher than I would have expected. The E and HR groups, even post-recession have 25-30% of loans default.
- 
+
 ```{r echo=FALSE, message=FALSE , warning=FALSE}
 # 16.
 
@@ -394,18 +334,18 @@ ggLossCat <- ggplot(data = arrange(full.df, Results),
 ggLossCat
 ```
 
-The average loss rate per dollar invested.
+<!-- The average loss rate per dollar invested. -->
 
 ```{r echo=FALSE, message=FALSE , warning=FALSE}
 
 # 17.
-ggLossCatTime <- ggplot(data = arrange(full.df, Results), 
-                 aes(x = LoanOriginationQuarter, 
-                     y = LP_GrossPrincipalLoss / LoanOriginalAmount)) +
-                 geom_bar(stat = "summary", fun.y = mean) +
-                 theme(axis.text.x = element_blank()) +
-                 facet_wrap(~Rating)
-ggLossCatTime
+# ggLossCatTime <- ggplot(data = arrange(full.df, Results), 
+#                  aes(x = LoanOriginationQuarter, 
+#                      y = LP_GrossPrincipalLoss / LoanOriginalAmount)) +
+#                  geom_bar(stat = "summary", fun.y = mean) +
+#                  theme(axis.text.x = element_blank()) +
+#                  facet_wrap(~Rating)
+# ggLossCatTime
 ```
 
 I want to see what are the main factors correlate with default. Based on this plot, I’m going to exclude everything from before July 2009 (the end of the “quiet period”) and only include loans that have a ProsperRating. I’m only going to use loans that are completed, so I will exclude LoanStatus of Current or Past Due.
@@ -506,7 +446,54 @@ The strongest relationship among my variables was between CreditScore and Borrow
 
 # Multivariate Plots Section
 
-**  Loan Amount / Borrower Rate / Prosper Rating**
+```{r echo=FALSE, message=FALSE , warning=FALSE}
+summary(full.df$LoanStatus)
+# 3.  create a new variable summarizing the result of each loan
+results.df <- full.df
+
+results.df$Results <- factor(results.df$ Results, levels = 0:2, 
+                         labels = c("Defaulted", "Past Due", "Current or Paid"))
+
+results.df <- results.df %>% group_by(Quarter = LoanOriginationQuarter, Results) %>%
+            summarize(Loans = n() / 10 ^ 3) %>% 
+            arrange(Quarter, Results) %>%
+            filter(Quarter < "2014")
+
+ggDefaults <- ggplot(results.df, aes(x = Quarter, y = Loans, fill = Results)) +
+    geom_bar(stat = "identity") +
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    ylab("Originations (Thousands)") +
+    ggtitle("Results of Loans Originated through FY 2013") +
+     theme(plot.title = element_text(hjust = 0.5))
+ggDefaults
+```
+
+Default rates were high initially, but improved with the new standards implemented after the ‘quiet period’. Default rates drop in recent quarters because those loans have had less time to enter default. Proper models defaults with curves and notes that those recent loans have default rates below expectations.
+
+
+```{r echo=FALSE, message=FALSE , warning=FALSE}
+## 5.  
+defaulted.df <- full.df
+
+defaulted.df$ Results <- factor(defaulted.df$Results, levels = 0:2, 
+                         labels = c("Defaulted", "Past Due", "Current or Paid"))
+
+defaulted.df <- defaulted.df %>% group_by(ProsperRatingCategory, Results) %>%
+                summarize(Loans = n() / 10 ^ 3) %>%
+                arrange(ProsperRatingCategory)
+
+defaulted.df$ProsperRatingCategory <- ordered(defaulted.df$ProsperRatingCategory, levels = c("AA",
+                     "A", "B", "C", "D","E","HR","N/A"))
+
+# ggWhoDefaults <- ggplot(defaulted.df, aes(x = ProsperRatingCategory, y = Loans,
+#                                           fill = Results)) +
+#                  geom_bar(stat = "identity") + 
+#                  ylab("Loans (Thousands)") + 
+#                   ggtitle("Loans Results by Rating") +
+#                  theme(plot.title = element_text(hjust = 0.5))
+# ggWhoDefaults
+```
 
 ```{r echo=FALSE, message=FALSE , warning=FALSE}
 start_date <- ymd("2009-07-15")
@@ -556,6 +543,40 @@ ggplot(data=subset(loans,!is.na(ProsperRating) & Term=='36'),aes(LoanOriginalAmo
 
 We observe that the variance is explained by risk, which is represented by the ProsperScore. The bottom of the scatter plot is dominated by loans with a ProsoperScore equal to 11, which represents loans with low risks. The top of the scatter plot is dominated by loans with a ProsoperScore equal to 4, which represents loans with higher risks. Loans with a loan amount higher than $25000 are mostly dominated by a ProsperScore equal or superior to 6.
 
+
+```{r echo=FALSE, message=FALSE , warning=FALSE}
+plot3a <- ggplot(data = filter(full.df, Rating != "N/A") %>% droplevels(),
+                 aes(x = LoanOriginationQuarter, y = BorrowerAPR)) +
+          facet_grid(~Rating) +
+          geom_line(aes(y = 100 * LP_GrossPrincipalLoss / LoanOriginalAmount,
+                        group = 1),
+                    stat = "summary", fun.y = mean, lwd = 1) +
+          geom_line(aes(y = 100 * LP_InterestandFees / LoanOriginalAmount,
+                        group = 1),
+                    stat = "summary", fun.y = mean, color = "green4", lwd = 1) +
+          theme(axis.ticks = element_blank(), axis.text.x = element_blank()) +
+          ylab("Percentage of Origination") +
+          xlab("Quarterly Results 2006 - 2013 by Prosper Rating Category") +
+          ggtitle("Principal Lost (black) v. Interest and Fees Collected (green)")
+
+plot3b <- ggplot(data = filter(full.df, Rating != "N/A") %>% droplevels(),
+                 aes(x = LoanOriginationQuarter,
+                     y = 100* (LP_InterestandFees - LP_GrossPrincipalLoss -
+                               LP_ServiceFees - LP_CollectionFees) /
+                         LoanOriginalAmount,
+                     group = 1)) +
+          geom_line(stat = "summary", fun.y = mean, lwd = 1) +
+          geom_hline(y = 0, yintercept = 5, color = "red3") +
+          facet_grid(~Rating) +
+          theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+          ylab("Percentage") +
+          xlab("Quarterly Results 2006 - 2013 by Prosper Rating Category") +
+          ggtitle("Return on Investment (ROI) After Fees")
+grid.arrange(plot3a, plot3b, nrow = 2)
+
+
+```
+
 # Multivariate Analysis
 
 #### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
@@ -575,7 +596,7 @@ I found it interesting that larger loan requests were associated with higher cre
 # Final Plots and Summary
 
 ### Plot One
-```{r echo=FALSE, Plot_One}
+```{r echo=FALSE, message=FALSE , warning=FALSE, Plot_One}
 plot1 <- ggOriginationDollars + ylab("Loan Originations (million USD)") +
          ggtitle("Prosper Loan Marketplace History through FY 2013")
 plot1
@@ -585,7 +606,8 @@ plot1
 Prosper Loan's business history is encoded the the dollar value of the loans originated through their online marketplace.  Prosper was the first peer-to-peer lending marketplace, opening to the public February 5, 2006[[1](https://en.wikipedia.org/wiki/Prosper_Marketplace)].  Initially, lenders bid on loans by offering competing interest rates.  Prosper's business model came under scrutiny by the US Securities and Exchange Commission, who issued a "cease and desist" letter November 24, 2008.[[2](https://www.sec.gov/litigation/admin/2008/33-8984.pdf)]   In anticipation, Prosper filed for SEC registration, which required a "quiet period" from October 15, 2008 until July 13, 2009, during which time, no new loans were originated.[[3](http://www.lendacademy.com/a-look-back-at-the-lending-club-and-prosper-quiet-periods/)]  Prosper attributes the decrease in originations at the end of 2012 to a decrease in liquidity and in January of 2013 undertook an equity financing [[4](https://www.prosper.com/Downloads/Legal/prosper10k12312013.pdf), p 74].  The increase in capital was used in part for a marketing campaign to attract more borrowers and to launch IRA accounts to attract institutional lenders.
 
 ### Plot Two
-```{r echo=FALSE, Plot_Two}
+
+```{r echo=FALSE, message=FALSE , warning=FALSE, Plot_Two}
 plot2 <- ggDefaults + ylab("Number of Loan Originations (Thousands)") +
          scale_fill_manual(values = c("Defaulted" = "red3",
                                        "Past Due" = "yellow", 
@@ -598,7 +620,7 @@ In this plot, we switch from dollar amounts to number of new loans originated ea
 
 
 ### Plot Three
-```{r echo=FALSE, message=FALSE, Plot_Three}
+```{r echo=FALSE, message=FALSE , warning=FALSE, Plot_Three}
 plot3a <- ggplot(data = filter(full.df, Rating != "N/A") %>% droplevels(),
                  aes(x = LoanOriginationQuarter, y = BorrowerAPR)) +
           facet_grid(~Rating) +
@@ -640,4 +662,4 @@ Before this project I didn’t know anything about R, ggplot, Prosper peer-to-pe
 
 I tried to begin by read all of Prosper’s website and their annual report, analyzing Prosper's business model. I divided the business model into two domain. Domain one is company domain (one role: Prosper), Domain two is customer domain (two role: Investor and borrower), Then classify the attributes of the dataset according to the three roles. And it started to tell a coherent story. The variable list made a lot more sense, and I could see what information wasn’t included for public release. At last, I can explore. I chose these three plots because together they tell the history of Prosper Loan and how it works.
 
-Through this project practice, I realized this truth, the third leg of data science is substantive experience. 
+Through this project practice, I realized this truth, the third leg of data science is substantive experience. For the future work of the project, I would really like to make a predictive model to compare against the FY 2014 to FY 2017 data.  I could treat loan result as label and train the model with selected features (CreditScore, Rating and BorrowerAPR, etc). Then use the trained model to predict the result of new loans. I am looking forward to learning more about modeling and predictions in coming the Machine Learning class. 
