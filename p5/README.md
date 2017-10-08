@@ -1,150 +1,64 @@
-# P5: Identify Fraud from Enron Email
+# Identifying Persons of Interest from the Enron Corpus
+## Bin LIu
+## Intro to Machine Learning Project 
 ## Udacity Data Analyst Nanodegree
-**By Bin Liu2**   
+## October 8, 2017
 
-### Summarize for us the goal of this project and how machine learning is useful in trying to accomplish it. As part of your answer, give some background on the dataset and how it can be used to answer the project question. Were there any outliers in the data when you got it, and how did you handle those?  [relevant rubric items: “data exploration”, “outlier investigation”]
+Question 1 *Summarize for us the goal of this project and how machine learning is useful in trying to accomplish it. As part of your answer, give some background on the dataset and how it can be used to answer the project question. Were there any outliers in the data when you got it, and how did you handle those?*
 
-The goal of the project is to identify persons of interest (POIs) in the [Enron scandal](https://en.wikipedia.org/wiki/Enron_scandal). who may have committed fraud based on the public Enron financial and email dataset, i.e., a person of interest. We define a person of interest (POI) as an individual who was indicted, reached a settlement or plea deal with the government, or testified in exchange for prosecution immunity.
+Goal of the project is to identify persons of interest (POIs) in the [Enron scandal](https://en.wikipedia.org/wiki/Enron_scandal)
+with the Enron financial and email dataset [ref](https://www.cs.cmu.edu/~./enron/). The corpus was made public by the US Federal Energy Regulatory Commission during its investigation into the collapse of Enron. It is widely used in machine learning([ref](http://tinyurl.com/qzdgb2r)).
 
-Machine learning algorithms are useful in trying to accomplish goals like this one because they can process datasets way faster than humans and they can spot relevant trends that humans would have a hard time realizing manually. Here is some background on the Enron financial and email dataset.
+Exploration of the dataset found 146 persons including 18 flagged as a POI.  Each person had 21 possible features. These features can be divided into two categories, financial and email features, and they came from different sources. all persons contained a POI flag, the remaining each of the remaining features had a missing value for at least 20 people.  
 
-#### Employees
+**Number of People Missing a Value for Each Feature**:  
 
-There are 146 Enron employees in the dataset. 18 of them are POIs.
+| Feature | # | Feature | # | Feature | # | Feature | # | Feature | # |  
+| :--- | :--: | :--- | :--: | :--- | :--:| :--- | :--: | :--- | :--: |  
+| Salary | 51 | Deferral payments | 107 | Loan advances | 142 | Total payments | 21 | Emails sent | 60 |  
+| Bonus | 64 | Exercised stock options | 44 | Director fees | 129 | Total stock value | 20 | Emails received | 60 |  
+| Expenses | 51 | Restricted stock | 36 | Deferred income | 97 | Email address | 35 | Emails from POI | 60 |  
+| Other | 53 | Restricted stock deferred | 128 | Long term incentive | 80 | Emails sent also to POI | 60 | Emails to POI | 60 |  
 
-#### Features
+## Stop here 20171008 23:06 !!!
 
-There are fourteen (14) financial features. All units are US dollars.
+  Sixty of the people in the dataset had no values for the email features (including 4 Persons of Interest) and 3 people had no values for the finanical features (Ronnie Chan, William Powers, and Eugene E. Lockhart, none of whom are Persons of Interest).
 
-- salary
-- deferral_payments
-- total_payments
-- loan_advances
-- bonus
-- restricted_stock_deferred
-- deferred_income
-- total_stock_value
-- expenses
-- exercised_stock_options
-- other
-- long_term_incentive
-- restricted_stock
-- director_fees
+The smallest numbers of missing entries were the financial features 'total_payments' and 'total_stock_value'.  A scatterplot of these features revealed one point with values much larger than the other points.  Comparing the values to the financial information given in 'enron61702insiderpay.pdf' revealed that the point belonged to 'TOTAL'.  This point was removed from the dictionary of data as being an artifact of the spreadsheet.  A second scatterplot revealed a different point with values much larger than all of the other points.  This point belonged to Kenneth Lay, a Person of Interest.  This very meaningful point was left in the dataset. 
 
-There are six (6) email features. All units are number of emails messages, except for ‘email_address’, which is a text string.
+The outlier point is "TOTAL"  
+![](/Project/total_paymentstotal_stock_valuebefore.png)  
+The outlier point is "LAY KENNETH K"  
+![](/Project/total_paymentstotal_stock_value.png)
 
-- to_messages
-- email_address
-- from_poi_to_this_person
-- from_messages
-- from_this_person_to_poi
-- shared_receipt_with_poi
+Question 2 *What features did you end up using in your POI identifier, and what selection process did you use to pick them? Did you have to do any scaling? Why or why not? As part of the assignment, you should attempt to engineer your own feature that does not come ready-made in the dataset -- explain what feature you tried to make, and the rationale behind it. (You do not necessarily have to use it in the final analysis, only engineer and test it.) In your feature selection step, f you used an algorithm like a decision tree, please also give the feature importances of the features that you use, and if you used an automated feature selection function like SelectKBest, please report the feature scores.*
 
-There is one (1) other feature, which is a boolean, indicating whether or not the employee is a person of interest.
- 
-- poi
+To select features, I used recursive feature elimination with cross-validation.  For each feature, a coefficient was calculated assuming that all other features were held constant.  This was done by a linear support vector classifier.  This classifier requires feature scaling.  All features were scaled by setting the minimum value to 0 and the maxium to 1.  Min-Max scaling preserves zero values in the data, which is useful in this case because missing values are coded as zero within the featureFormat function.  After the coefficients are calculated, the feature whose coefficient is closest to zero is discarded and the process is repeated.  At each step, the overall model is evaluated using F1 score as a metric (discussed in question 6).  The optimal number of features was found to be 16 features and the features 'loan advances', 'total payments', and 'other' were eliminated.  The F1 score for this model was 0.292, but individual feature coefficients are not returned from this function.  
+![](Project/featureSelection.png)  
+Each email-related feature had a very large range of values and it makes sense that the number of emails a person sent to POIs is going to be related to the number of emails that they ususally send.  I created new features 'fraction_to_poi' and 'fraction_from_poi' as the proportion of email messages to and from POIs.    I added the two engineered features to those selected above and ran the recursive feature elimination again.  This time, the best results came from using only 4 features and the F1 score improved from 0.292 to 0.332.   The final features were: 'expenses', 'exercised stock options', the number of emails where the person was a joint receipent with a POI, and one of the engineered features, 'fraction to POI'.  This is the feature set that will be used to select a classification algorithm.  
+![](Project/featureSelection2.png)
 
-#### Missing Features
+Question 3 *What algorithm did you end up using? What other one(s) did you try? How did model performance differ between algorithms?*
 
-20 of the 21 features have missing values (represented as "NaN"), with the exception being the "poi" feature.
+Ensemble methods do well at kaggle competitions, so I tried two of the most popular algorithms: random forest and adaboost.  In random forest, a series of decision trees are built on randomized subsets of the data.  At each node, a randomized subset of variables is evaluated to find the best split.  This creates a “forest” of independent, randomized trees.  The predictions of all the trees are averaged to assign a predicted label.  I started with the default options, though I set class weights to be inversely proportional to their representation in the dataset.  AdaBoost is also an ensemble of decision trees, but the trees are not independent.  First, a single tree is fit using all of the data.  Incorrectly assigned points are then given a higher weight (boosted) and the process is repeated.  By default, adaboost uses trees of depth 1, single feature trees called decision stumps.
 
-The missing financial features are imputed by <code>featureFormat</code> to zero (0). Imputing to zero makes sense for these features because we have a reasonably complete financial picture through the FindLaw "Payments to Insiders" document. I am assuming that if a feature has a dash ('-'), like several 'bonus' rows do, that means it is zero. That isn't an unreasonable assumption since there are no actual zeros in that document and the dashes take their place.
+Model|Time|F1|Precision|Recall
+----|---|---|----|----
+Random Forest|1.166s|0.307|0.443|0.235
+AdaBoost|5.472s|0.505|0.554|0.465
 
-I imputed the missing email features to each feature's mean. Imputing to zero doesn't make sense in this case because the email data appears incomplete. 60 of the 146 employees in the dataset have "NaN" for all of their email features. A missing feature likely means we couldn't find the data, rather than the value is zero. Though this introduces some bias, we are at the whim of the dataset and imputing to the mean is a fine option.
+AdaBoost was better than random forest according to each metric, but took almost 5 times as long.  I don't want to give up on random forest, so I will attempt to tune both algorithms.
 
-#### Outliers
+Question 4 *What does it mean to tune the parameters of an algorithm, and what can happen if you don’t do this well?  How did you tune the parameters of your particular algorithm? (Some algorithms do not have parameters that you need to tune -- if this is the case for the one you picked, identify and briefly explain how you would have done it for the model that was not your final choice or a different model that does utilize parameter tuning, e.g. a decision tree classifier).*
 
-Before choosing the features to include in a machine learning learning algorithm, I plotted histograms of all of the features to get a feel for their distributions. These histograms made it easy to spot outliers, as well.
+Tuning the parameters of an algorithm refers to adjustments made when training the algorithm to improve the fit on the test data set.  It is very easy to overfit the training data by including too many features, but such an algorithm will not make good predictions.  Overfitting can be avoided by holding make a subset of the data to test the algorithm's predictions against.  
 
-Every financial feature had a huge outlier generated by the "Total" row in the FindLaw "Payments to Insiders" document. I removed those from the dataset immediately. There was another non-employee entry in the dataset belonging to "The Travel Agency in the Park" that I removed as well.
+The best parameters to tune for random forest are the number of trees built and the number of parameters evaluated at each node.  With 100 trees and 4 features (all of them), the F1 score improved from 0.307 to 0.344, which is still not as good as adaboost.  For adaboost, the main parameters for tuning are the number of weak estimators and their complexity.  In this case the estimators are decision trees, so I tune the number of them and their maximum depth.  With a maximum depth of 1 (the default) and 70 estimators, adaboost achieved an F1 score of 0.475.  Since the default options were included in the grid search parameters, I don't know why the score decreased, but it may be because I am using a smaller number of iterations in the testing function.
 
-### What features did you end up using in your POI identifier, and what selection process did you use to pick them? Did you have to do any scaling? Why or why not? As part of the assignment, you should attempt to engineer your own feature that does not come ready-made in the dataset -- explain what feature you tried to make, and the rationale behind it. (You do not necessarily have to use it in the final analysis, only engineer and test it.) In your feature selection step, if you used an algorithm like a decision tree, please also give the feature importances of the features that you use, and if you used an automated feature selection function like SelectKBest, please report the feature scores and reasons for your choice of parameter values.  [relevant rubric items: “create new features”, “properly scale features”, “intelligently select feature”]
+Question 5 *What is validation, and what’s a classic mistake you can make if you do it wrong? How did you validate your analysis?*
 
-#### Features Engineered
+Validation refers to checking the algorithm's predictions against data that was not used for training the algorithm to prevent the algorithm from simply memorizing the training data (overfitting).  However, this dataset is already very small with only 14 Persons of Interest.  A single split into a training and test set would not give a very accurate estimate of error.  Instead, throughout this analysis, I use the StratifiedShuffleSplit function to randomly split the data into 30% test set and 70% training while keeping the fraction of POIs in each split relatively constant.
 
-I add three features to the dataset to bring the total number of features to 24:
+Question 6 *Give at least 2 evaluation metrics and your average performance for each of them.  Explain an interpretation of your metrics that says something human-understandable about your algorithm's performance.*
 
-- bonus_salary ratio
-- from_this_person_to_poi_percentage
-- from_poi_to_this_person_percentage
-
-Bonus salary ratio might be able to pick up on potential mischief involving employees with low salaries and high bonuses, or vice versa.
-
-Scaling the 'from_this_person_to_poi' and 'from_poi_to_this_person'  by the total number of emails sent and received, respectively, might help us identify those have low amounts of email activity overall, but a high percentage of email activity with POIs.
-
-#### Scaling
-
-Proprocessing via scaling was performed when I used the k-nearest neighbours algorithm and the support vector machines (SVM) algorithm, but not when I used a decision tree.
-
-As described on stats.stackexchange (link for [k-nearest neighbours](http://stats.stackexchange.com/questions/121886/when-should-i-apply-feature-scaling-for-my-data); link for [SVM](http://stats.stackexchange.com/questions/65094/why-scaling-is-important-for-the-linear-svm-classification)), normalization is required for:
-
-- k-nearest neighbours because the distance between the points drives the clustering that determines the nearest neighbours. If one feature has a much larger scale than another, the clustering will be driven by the larger scale and the distance between points on the smaller scale will be overshadowed.
-- SVM because the distance between the separating plane and the support vectors drives the algorithm's decision-making. If one feature has a much larger scale than another, it will dominate the other features distance-wise.
-
-Scaling isn't required for tree-based algorithms because the splitting of the data is based on a threshold value. This decision made based on this threshold value is not affected by different scales.
-
-#### Selection Process
-
-I used a univariate feature selection process, select k-best, in a pipeline with grid search to select the features. Select k-best removes all but the k highest scoring features. The number of features, 'k', was chosen through an exhaustive grid search driven by the 'f1' scoring estimator, intending to maximize precision and recall.
-
-#### Features Selected
-
-I used the following six features in my POI identifier, which was a decision tree classifier. The first number is feature importance (from the decision tree classifier) and the second is feature score (from select k-best). The order of features is descending based on feature importance.
-
-- Feature no. 1: bonus_salary_ratio (0.658595952706) (22.1067164085)
-- Feature no. 2: shared_receipt_with_poi (0.180270198721) (6.1299573021)
-- Feature no. 3: total_stock_value (0.161133848573) (16.8651432616)
-- Feature no. 4: exercised_stock_options (0.0) (16.9328653375)
-- Feature no. 5: bonus (0.0) (34.2129648303)
-- Feature no. 6: salary (0.0) (17.7678544529)
-
-Bonus salary ratio, shared receipt with a POI, and total stock value were the most important features.
-
-### What algorithm did you end up using? What other one(s) did you try? How did model performance differ between algorithms?  [relevant rubric item: “pick an algorithm”]
-
-I focused on three algorithms, with parameter tuning incorporated into algorithm selection (i.e. parameters tuned for more than one algorithm, and best algorithm-tune combination selected for final analysis). These algorithms were:
-
-- decision tree classifier
-- SVM
-- k-nearest neighbors
-
-Though I used the classfiication report for quick checks, I used tester.py's evaluation metrics to make sure I would get precision and recall above 0.3 for the Udacity grading system. Here is how each performed:
-
-- The decision tree classifier had a precision of 0.31336 and a recall of 0.59100, both above the 0.3 threshold.
-- The SVM classifier (with features scaled) had a gaudy precision of 0.83333, but a poor recall of 0.06500.
-- The k-nearest neighbors classifier had a precision of 0.32247 and a recall of 0.29200, both near but not both above the 0.3 threshold.
-
-As described by [Udacity Coach Mitchell](https://discussions.udacity.com/t/can-the-scoring-function-in-tester-py-be-used-in-gridsearch/24236/4), the SVM classifier is not a good fit for the unbalanced classes in the Enron data set, i.e., the lack POIs vs. the abundance of non-POIs. The SVM overfit to the points in the training set, and poorly generalized to the test set resulting in a relatively small number of positive predictions of POIs.
-
-### What does it mean to tune the parameters of an algorithm, and what can happen if you don’t do this well?  How did you tune the parameters of your particular algorithm? (Some algorithms do not have parameters that you need to tune -- if this is the case for the one you picked, identify and briefly explain how you would have done it for the model that was not your final choice or a different model that does utilize parameter tuning, e.g. a decision tree classifier).  [relevant rubric item: “tune the algorithm”]
-
-Tuning the parameters of an algorithm means adjusting the parameters in a certain way to achieve optimal algorithm performance. There are a variety of "certain ways" (e.g. a manual guess-and-check method or automatically with GridSearchCV) and "algorithm performance" can be measured in a variety of ways (e.g. accuracy, precision, or recall). If you don't tune the algorithm well, performance may suffer. The data won't be "learned" well and you won't be able to successfully make predictions on new data.
-
-I used GridSearchCV for parameter tuning. As Katie Malone describes for [Civis Analytics](https://civisanalytics.com/blog/data-science/2016/01/06/workflows-python-using-pipeline-gridsearchcv-for-compact-code/), GridSearchCV allows us to construct a grid of all the combinations of parameters, tries each combination, and then reports back the best combination/model.
-
-For the chosen decision tree classifier for example, I tried out multiple different parameter values for each of the following parameters (with the optimal combination bolded). I used Stratified Shuffle Split cross validation to guard against bias introduced by the potential underrepresentation of classes (i.e. POIs).
-
-- criterion=['**gini**', 'entropy']
-- splitter=['**best**', 'random']
-- max_depth=[None, 1, **2**, 3, 4]
-- min_samples_split=[**1**, 2, 3, 4, 25]
-- class_weight=[None, '**balanced**']
-
-Note that a few of these chosen parameter values were different than their default values, which proves the importance of tuning.
-
-### What is validation, and what’s a classic mistake you can make if you do it wrong? How did you validate your analysis?  [relevant rubric item: “validation strategy”]
-
-Validation is a way to substantiate your machine learning algorithm's performance, i.e., to test how well your model has been trained. A classic validation mistake is testing your algorithm on the same data that is was trained on. Without separating the training set from the testing set, it is difficult to determine how well your algorithm generalizes to new data.
-
-In my poi_id.py file, my data was separated into training and testing sets. The test size was 30% of the data, while the training set was 70%.
-
-I also used tester.py's Stratified Shuffle Split cross validation as an alternate method to gauge my algorithm's performance. Because the Enron data set is so small, this type of cross validation was useful because it essentially created multiple datasets out of a single one to get more accurate results.
-
-### Give at least 2 evaluation metrics and your average performance for each of them.  Explain an interpretation of your metrics that says something human-understandable about your algorithm’s performance. [relevant rubric item: “usage of evaluation metrics”]
-
-The two notable evaluation metrics for this POI identifier are precision and recall. The average precision for my decision tree classifier was 0.31336 and the average recall was 0.59100. What do each of these mean?
-
-- Precision is how often our class prediction (POI vs. non-POI) is right when we guess that class
-- Recall is how often we guess the class (POI vs. non-POI) when the class actually occurred
-
-In the context of our POI identifier, it is arguably more important to make sure we don't miss any POIs, so we don't care so much about precision. Imagine we are law enforcement using this algorithm as a screener to determine who to prosecute. When we guess POI, it is not the end of the world if they aren't a POI because we'll do due diligence. We won't put them in jail right away. For our case, we want high recall: when it is a POI, we need to make sure we catch them in our net. The decision tree algorithm performed best in recall (0.59) of the algorithms I tried, hence it being my choice for final analysis.
+The final model (AdaBoost) had precision = 0.56, recall = 0.49, and F1 = 0.52.  This means that given a Person of Interest, the algorithm will recognize it almost of the time and that 56% of POIs flagged by the algorithm will have actually pled guilty to a crime connected to the Enron scandal. The F1 score is a combination of the two metrics, F1 = 2 * (precision * recall) / (precision + recall).
