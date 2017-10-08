@@ -11,7 +11,7 @@ with the Enron financial and email dataset [ref](https://www.cs.cmu.edu/~./enron
 
 Exploration of the dataset found 146 persons including 18 flagged as a POI.  Each person had 21 possible features. These features can be divided into two categories, financial and email features, and they came from different sources. all persons contained a POI flag, the remaining each of the remaining features had a missing value for at least 20 people.  
 
-**Number of People Missing a Value for Each Feature**:  
+**Missing Values of Each Feature in the Dataset**: 
 
 | Feature | # | Feature | # | Feature | # | Feature | # | Feature | # |  
 | :--- | :--: | :--- | :--: | :--- | :--:| :--- | :--: | :--- | :--: |  
@@ -20,10 +20,9 @@ Exploration of the dataset found 146 persons including 18 flagged as a POI.  Eac
 | Expenses | 51 | Restricted stock | 36 | Deferred income | 97 | Email address | 35 | Emails from POI | 60 |  
 | Other | 53 | Restricted stock deferred | 128 | Long term incentive | 80 | Emails sent also to POI | 60 | Emails to POI | 60 |  
 
-## Stop here 20171008 23:06 !!!
+Sixty of the people in the dataset had no values for the email features (including 4 Persons of Interest) and 3 people had no values for the finanical features (Ronnie Chan, William Powers, and Eugene E. Lockhart, none of whom are Persons of Interest).
 
-  Sixty of the people in the dataset had no values for the email features (including 4 Persons of Interest) and 3 people had no values for the finanical features (Ronnie Chan, William Powers, and Eugene E. Lockhart, none of whom are Persons of Interest).
-
+## Stop here 20171008 23:14 !!!
 The smallest numbers of missing entries were the financial features 'total_payments' and 'total_stock_value'.  A scatterplot of these features revealed one point with values much larger than the other points.  Comparing the values to the financial information given in 'enron61702insiderpay.pdf' revealed that the point belonged to 'TOTAL'.  This point was removed from the dictionary of data as being an artifact of the spreadsheet.  A second scatterplot revealed a different point with values much larger than all of the other points.  This point belonged to Kenneth Lay, a Person of Interest.  This very meaningful point was left in the dataset. 
 
 The outlier point is "TOTAL"  
