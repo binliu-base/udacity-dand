@@ -25,9 +25,9 @@ Sixty of the people in the dataset had no values for the email features (includi
  I plot salaries and bonuses on Enron employees and check the outliers, A scatterplot of these features revealed one point with values much larger than the other points.  Comparing the values to the financial information given in 'enron61702insiderpay.pdf' revealed that the point belonged to 'TOTAL'.  This point was removed from the dictionary of data as being an artifact of the spreadsheet.  A second scatterplot revealed two different point with values much larger than all of the other points.  This point belonged to Kenneth Lay and Skilling Jeffery, both are Person of Interest. These very meaningful point was left in the dataset. 
 
 The outlier point is "TOTAL"  
-![](/final_project/outlier_of_TOTAL.png)  
+![outlier_of_TOTAL](/final_project/outlier_of_TOTAL.png)  
 Two more outlier point "LAY KENNETH L" and "SKILLING JEFFREY K"  
-![](/final_project/two_more_outliers.png)
+![two_more_outliers](/final_project/two_more_outliers.png)
 
 #### Question 2 *What features did you end up using in your POI identifier, and what selection process did you use to pick them? Did you have to do any scaling? Why or why not? As part of the assignment, you should attempt to engineer your own feature that does not come ready-made in the dataset -- explain what feature you tried to make, and the rationale behind it. (You do not necessarily have to use it in the final analysis, only engineer and test it.) In your feature selection step, f you used an algorithm like a decision tree, please also give the feature importances of the features that you use, and if you used an automated feature selection function like SelectKBest, please report the feature scores.*
 
