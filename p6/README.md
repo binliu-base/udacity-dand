@@ -16,13 +16,13 @@ This project charts 3 different graphs. It shows the number of survivals based o
 
 ## Feedback
 I gathered feedback from 3 different people and tried to follow Udacity questions guideline and here are the abridged responses.
-#### 1
+#### Interview #1
 > It would be best to use 'perished' instead of 'died' as this tense matches that of 'survived'.
 
-#### 2
+#### Interview #2
 > It would be best to increase the font size of x and y-axis. because the default font size is too small.
 
-#### 3
+#### Interview #3
 > Color in the stacked bar chart can be improved. The color which is used is good but more conventional and sequential color can improve the visualization. 
 
 ## Resources
