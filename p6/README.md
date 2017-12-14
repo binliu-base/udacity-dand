@@ -25,6 +25,10 @@ I gathered feedback from 3 different people and tried to follow Udacity question
 #### Interview #3
 > Color in the stacked bar chart can be improved. The color which is used is good but more conventional and sequential color can improve the visualization. 
 
+
+## Final Visualization
+http://bl.ocks.org/binliu-base/605ded90e4ebeb5c45c39c571b5d48a6
+
 ## Resources
 
 * [mbostock](https://bl.ocks.org/mbostock)
