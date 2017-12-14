@@ -30,3 +30,6 @@ Color in the stacked bar chart can be improved. The color which is used is good 
 * [mbostock](https://bl.ocks.org/mbostock)
 * [dimple.js Documentation](http://dimplejs.org/)
 * [d3 documentation's](https://github.com/d3/d3/blob/master/API.md)
+
+
+

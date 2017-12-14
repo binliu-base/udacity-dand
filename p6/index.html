@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://dimplejs.org/dist/dimple.v2.1.2.min.js"></script>
+<style>
+	body {
+		font-family: Helvetica;
+	}
+/*	svg {
+		width:500px;
+		height:500px;
+	}*/
+	.top-label {
+		font-size: 13px;
+		font-style: italic;
+		text-transform: uppercase;
+		float: left;
+	}
+	.age-label {
+		text-align: right;
+		font-weight: bold;
+		width: 90px;
+		padding-right: 10px;
+	}
+	.clearfix {
+		clear: both;
+	}
+	.bar {
+		fill: DarkSlateBlue;
+	}
+	.bar-label {
+		text-anchor: end;
+	}
+	.axis-label {
+		text-anchor: middle;
+		font-size: 13px;
+	}
+
+     .buttons-container {
+          width: 520px;
+          margin-bottom: 25px;
+     }
+
+     .chartContainer {
+          width: 620px;
+          margin-bottom: 25px;
+     }     
+     .button {
+          float: left;
+          margin-right: 10px;
+          font-weight: lighter;
+          cursor: pointer;
+     }
+     .selected {
+          font-weight: bold;
+     }
+</style>
+</head>
+
+<body>
+
+	<script>
+
+		var buttons = [{name: "Survival by Age", id: "btn1"}, 
+					  {name: "Survival by Class", id: "btn2"}, 
+					  {name: "Survival by Gender", id: "btn3"}]
+
+		var body = d3.select("body");
+		var btn_selected = "Survival by Age"
+
+	    body.append("h1")
+	            .text("Survival rates on the titanic").style("font-family","Trebuchet MS").style("font-size", "20px");     
+
+		var buttons = body.append("div")
+		  .attr("class", "buttons-container")
+		  .selectAll("div").data(buttons)
+			.enter().append("button")
+		  .text(function(d) { return d.name; })
+		  .attr("id", function(d) { return d.id; })
+		  .attr("class", function(d) {
+		       if(d == btn_selected)
+		            return "button selected";
+		       else
+		            return "button";
+		  });
+
+		// set width and height dimensions of the chart
+		var margin = {top: 20, right: 0, bottom: 50, left: 20},
+		  width = 620 - margin.left - margin.right,
+		  height = 500 - margin.top - margin.bottom;
+
+		body.append("div")
+		  .attr("class", "chartContainer");
+
+		var svg = dimple.newSvg('.chartContainer', width , height);
+		d3.csv('titanic_data_v3.csv', function(data) {
+			var myChart = new dimple.chart(svg,data);
+			myChart.setBounds(80,30,510,305);
+			var x = myChart.addCategoryAxis('x', 'Age Group');
+			x.addOrderRule(["Children", "Adults", "Senior", "NaN"]);			
+			var y = myChart.addPctAxis('y', 'Count');
+			var s = myChart.addSeries("Survival", dimple.plot.bar);
+	        y.title = "Ratio of Passengers";
+	        y.fontSize = "15px";
+	        x.fontSize = "15px";		        							
+			legend = myChart.addLegend(60, 10, 520, 20, "right");			
+			myChart.draw(1000);			
+		});
+
+		d3.select("#btn1").on("click", function(){
+			d3.select("svg").remove();
+			var svg = dimple.newSvg(".chartContainer", width , height);
+			d3.csv('titanic_data_v3.csv', function(data) {
+				var myChart = new dimple.chart(svg,data);
+				myChart.setBounds(80,30,510,305);
+				var x = myChart.addCategoryAxis('x', 'Age Group');
+				x.addOrderRule(["Children", "Adults", "Senior", "NaN"]);
+				var y = myChart.addPctAxis('y', 'Count');
+		        y.title = "Ratio of Passengers";
+		        y.fontSize = "15px";
+		        x.fontSize = "15px";		        				
+				var s = myChart.addSeries("Survival", dimple.plot.bar);
+				legend = myChart.addLegend(60, 10, 520, 20, "right");			
+				myChart.draw(1000);
+			});
+		});
+
+		d3.select("#btn2").on("click", function(){
+			d3.select("svg").remove();
+			var svg = dimple.newSvg(".chartContainer", width , height);
+			d3.csv('titanic_data_v3.csv', function(data) {
+				var myChart = new dimple.chart(svg,data);
+				myChart.setBounds(80,30,510,305);
+				var x = myChart.addCategoryAxis('x', 'Pclass');
+				var y = myChart.addPctAxis('y', 'Count');
+		        y.title = "Ratio of Passengers";
+		        y.fontSize = "15px";
+		        x.fontSize = "15px";		
+		        x.title = "Cabin Class"		
+				var s = myChart.addSeries("Survival", dimple.plot.bar);
+				legend = myChart.addLegend(60, 10, 520, 20, "right");			
+				myChart.draw(1000);
+				myChart.text("if you are actuall");
+			});
+		});
+
+		d3.select("#btn3").on("click", function(){
+			d3.select("svg").remove();
+			var svg = dimple.newSvg(".chartContainer", 600, 400);
+			d3.csv('titanic_data_v3.csv', function(data) {
+				var myChart = new dimple.chart(svg,data);
+				myChart.setBounds(80,30,510,305);
+				var x = myChart.addCategoryAxis('x', 'Sex');
+				var y = myChart.addPctAxis('y', 'Count');
+		        y.title = "Ratio of Passengers";
+		        x.title = "Gender"		        
+		        y.fontSize = "15px";
+		        x.fontSize = "15px";				
+				var s = myChart.addSeries("Survival", dimple.plot.bar);
+				legend = myChart.addLegend(60, 10, 520, 20, "right");			
+				myChart.draw(1000);
+			});
+		});
+
+	</script>
+</body>
+</html>
+
