@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://dimplejs.org/dist/dimple.v2.1.2.min.js"></script>
+	<style>
+		body {
+			margin: 50px;
+		}
+
+
+	</style>
+	<style type="text/css">
+		h1 {
+			font-family: "Trebuchet MS", Helvetica, sans-serif;
+			font-size: 35px;
+		}
+
+		p {
+			width: 600px;
+			font-family: "Tahoma", Geneva, sans-serif;
+			font-size: 15px;
+		}
+	</style>
+</head>
+<body>
+
+	<h1>Survival rates on the titanic</h1>
+	<p>The sinking of titanic was one of the deadliest peacetime maritime disasters in history. Imagine yourself to be on the ship amidst the disaster, do you think you can survive ? Here is a visualization that will help you better understand the factors that led to the survival or demise of the individuals on the ship.</p>
+	<button id="btn1">Survival by Age</button>
+	<button id="btn2">Survival by Class</button>
+	<button id="btn3">Survival by Sex</button>
+
+	<div id="chartContainer">
+		<script type="text/javascript">
+			var svg = dimple.newSvg('#chartContainer', 600,400);
+			d3.csv('titanic_data_v3.csv', function(data) {
+				var myChart = new dimple.chart(svg,data);
+				myChart.setBounds(60,30,510,305);
+				var x = myChart.addCategoryAxis('x', 'Age Group');
+				x.addOrderRule(["Children", "Adults", "Senior"]);
+				var y = myChart.addPctAxis('y', 'Rate');
+				var s = myChart.addSeries("Survival", dimple.plot.bar);
+				myChart.addLegend(60, 10, 510, 20, "right");
+				myChart.draw(1000);
+			});
+		</script>
+
+
+		<script type="text/javascript">
+			d3.select("#btn1").on("click", function(){
+				d3.select("svg").remove();
+				var svg = dimple.newSvg("#chartContainer", 600, 400);
+				d3.csv('titanic_data_v3.csv', function(data) {
+					var myChart = new dimple.chart(svg,data);
+					myChart.setBounds(60,30,510,305);
+					var x = myChart.addCategoryAxis('x', 'Age Group');
+					x.addOrderRule(["Children", "Adults", "Senior"]);
+					var y = myChart.addPctAxis('y', 'Rate');
+					var s = myChart.addSeries("Survival", dimple.plot.bar);
+					myChart.addLegend(60, 10, 510, 20, "right");
+					myChart.draw(1000);
+				});
+			});
+		</script>
+
+
+		<script type="text/javascript">
+			d3.select("#btn2").on("click", function(){
+				d3.select("svg").remove();
+				var svg = dimple.newSvg("#chartContainer", 600, 400);
+				d3.csv('titanic_data_v3.csv', function(data) {
+					var myChart = new dimple.chart(svg,data);
+					myChart.setBounds(60,30,510,305);
+					var x = myChart.addCategoryAxis('x', 'Pclass');
+					var y = myChart.addPctAxis('y', 'Rate');
+					var s = myChart.addSeries("Survival", dimple.plot.bar);
+					myChart.addLegend(60, 10, 510, 20, "right");
+					myChart.draw(1000);
+					myChart.text("if you are actuall");
+				});
+			});
+		</script>
+
+		<script type="text/javascript">
+			d3.select("#btn3").on("click", function(){
+				d3.select("svg").remove();
+				var svg = dimple.newSvg("#chartContainer", 600, 400);
+				d3.csv('titanic_data_v3.csv', function(data) {
+					var myChart = new dimple.chart(svg,data);
+					myChart.setBounds(60,30,510,305);
+					var x = myChart.addCategoryAxis('x', 'Sex');
+					var y = myChart.addPctAxis('y', 'Rate');
+					var s = myChart.addSeries("Survival", dimple.plot.bar);
+					myChart.addLegend(60, 10, 510, 20, "right");
+					myChart.draw(1000);
+				});
+			});
+		</script>
+
+		<script type="text/javascript">
+			d3.select("#btn4").on("click", function(){
+				d3.select("svg").remove();
+				var svg = dimple.newSvg("#chartContainer", 600, 400);
+				d3.csv('titanic_data_v3.csv', function(data) {
+					var myChart = new dimple.chart(svg,data);
+					myChart.setBounds(60,30,510,305);
+					var x = myChart.addCategoryAxis('x', 'Embarked');
+					x.addOrderRule(["Cherbourg", "Southampton", "Queenstown"]);
+					var y = myChart.addPctAxis('y', 'Ratio of Passengers');
+					var s = myChart.addSeries("Survival", dimple.plot.bar);
+					myChart.addLegend(60, 10, 510, 20, "right");
+					myChart.draw(1000);
+				});
+			});
+		</script>
+	</script>
+</div>
+</body>
+</html>

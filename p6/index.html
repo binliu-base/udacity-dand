@@ -99,12 +99,46 @@
 			var myChart = new dimple.chart(svg,data);
 			myChart.setBounds(80,30,510,305);
 			var x = myChart.addCategoryAxis('x', 'Age Group');
-			x.addOrderRule(["Children", "Adults", "Senior", "NaN"]);			
-			var y = myChart.addPctAxis('y', 'Count');
-			var s = myChart.addSeries("Survival", dimple.plot.bar);
+			// x.addOrderRule(["Children", "Adults", "Senior", "NaN"]);			
+			x.addOrderRule(["Children", "Adults", "Senior"]);						
+			var y = myChart.addPctAxis('y', 'Rate');
+			var s = myChart.addSeries(["Survival"], dimple.plot.bar);
+			// console.log(s.chart);			
 	        y.title = "Ratio of Passengers";
 	        y.fontSize = "15px";
-	        x.fontSize = "15px";		        							
+	        x.fontSize = "15px";	
+
+			//Ref:  http://dimplejs.org/advanced_examples_viewer.html?id=advanced_bar_labels
+		    s.afterDraw = function (shape, data) {
+		        // Get the shape as a d3 selection
+		        var s = d3.select(shape),
+		          rect = {
+		            x: parseFloat(s.attr("x")),
+		            y: parseFloat(s.attr("y")),
+		            width: parseFloat(s.attr("width")),
+		            height: parseFloat(s.attr("height"))
+		          };
+		        // Only label bars where the text can fit
+		        if (rect.height >= 8) {
+		          // Add a text label for the value
+		          svg.append("text")
+		            // Position in the centre of the shape (vertical position is
+		            // manually set due to cross-browser problems with baseline)
+		            .attr("x", rect.x + rect.width / 2)
+		            .attr("y", rect.y + rect.height / 2 + 3.5)
+		            // Centre align
+		            .style("text-anchor", "middle")
+		            .style("font-size", "10px")
+		            .style("font-family", "sans-serif")
+		            // Make it a little transparent to tone down the black
+		            .style("opacity", 0.6)
+		            // Prevent text cursor on hover and allow tooltips
+		            .style("pointer-events", "none")
+		            // Format the number
+		            .text(d3.format(",.0f")(data.yValue));
+		        }
+		      };
+
 			legend = myChart.addLegend(60, 10, 520, 20, "right");			
 			myChart.draw(1000);			
 		});
@@ -116,12 +150,44 @@
 				var myChart = new dimple.chart(svg,data);
 				myChart.setBounds(80,30,510,305);
 				var x = myChart.addCategoryAxis('x', 'Age Group');
-				x.addOrderRule(["Children", "Adults", "Senior", "NaN"]);
-				var y = myChart.addPctAxis('y', 'Count');
-		        y.title = "Ratio of Passengers";
+				x.addOrderRule(["Children", "Adults", "Senior"]);						
+				var y = myChart.addPctAxis('y', 'Rate');
+			    y.title = "Ratio of Passengers";
 		        y.fontSize = "15px";
 		        x.fontSize = "15px";		        				
 				var s = myChart.addSeries("Survival", dimple.plot.bar);
+
+			    s.afterDraw = function (shape, data) {
+			        // Get the shape as a d3 selection
+			        var s = d3.select(shape),
+			          rect = {
+			            x: parseFloat(s.attr("x")),
+			            y: parseFloat(s.attr("y")),
+			            width: parseFloat(s.attr("width")),
+			            height: parseFloat(s.attr("height"))
+			          };
+			        // Only label bars where the text can fit
+			        if (rect.height >= 8) {
+			          // Add a text label for the value
+			          svg.append("text")
+			            // Position in the centre of the shape (vertical position is
+			            // manually set due to cross-browser problems with baseline)
+			            .attr("x", rect.x + rect.width / 2)
+			            .attr("y", rect.y + rect.height / 2 + 3.5)
+			            // Centre align
+			            .style("text-anchor", "middle")
+			            .style("font-size", "10px")
+			            .style("font-family", "sans-serif")
+			            // Make it a little transparent to tone down the black
+			            .style("opacity", 0.6)
+			            // Prevent text cursor on hover and allow tooltips
+			            .style("pointer-events", "none")
+			            // Format the number
+			            .text(d3.format(",.0f")(data.yValue));
+			        }
+			      };
+
+
 				legend = myChart.addLegend(60, 10, 520, 20, "right");			
 				myChart.draw(1000);
 			});
@@ -134,13 +200,45 @@
 				var myChart = new dimple.chart(svg,data);
 				myChart.setBounds(80,30,510,305);
 				var x = myChart.addCategoryAxis('x', 'Pclass');
-				var y = myChart.addPctAxis('y', 'Count');
+				var y = myChart.addPctAxis('y', 'Rate');
 		        y.title = "Ratio of Passengers";
 		        y.fontSize = "15px";
 		        x.fontSize = "15px";		
 		        x.title = "Cabin Class"		
 				var s = myChart.addSeries("Survival", dimple.plot.bar);
-				legend = myChart.addLegend(60, 10, 520, 20, "right");			
+				legend = myChart.addLegend(60, 10, 520, 20, "right");	
+
+			    s.afterDraw = function (shape, data) {
+			        // Get the shape as a d3 selection
+			        var s = d3.select(shape),
+			          rect = {
+			            x: parseFloat(s.attr("x")),
+			            y: parseFloat(s.attr("y")),
+			            width: parseFloat(s.attr("width")),
+			            height: parseFloat(s.attr("height"))
+			          };
+			        // Only label bars where the text can fit
+			        if (rect.height >= 8) {
+			          // Add a text label for the value
+			          svg.append("text")
+			            // Position in the centre of the shape (vertical position is
+			            // manually set due to cross-browser problems with baseline)
+			            .attr("x", rect.x + rect.width / 2)
+			            .attr("y", rect.y + rect.height / 2 + 3.5)
+			            // Centre align
+			            .style("text-anchor", "middle")
+			            .style("font-size", "10px")
+			            .style("font-family", "sans-serif")
+			            // Make it a little transparent to tone down the black
+			            .style("opacity", 0.6)
+			            // Prevent text cursor on hover and allow tooltips
+			            .style("pointer-events", "none")
+			            // Format the number
+			            .text(d3.format(",.0f")(data.yValue));
+			        }
+			      };
+
+
 				myChart.draw(1000);
 				myChart.text("if you are actuall");
 			});
@@ -153,12 +251,43 @@
 				var myChart = new dimple.chart(svg,data);
 				myChart.setBounds(80,30,510,305);
 				var x = myChart.addCategoryAxis('x', 'Sex');
-				var y = myChart.addPctAxis('y', 'Count');
+				var y = myChart.addPctAxis('y', 'Rate');
 		        y.title = "Ratio of Passengers";
 		        x.title = "Gender"		        
 		        y.fontSize = "15px";
 		        x.fontSize = "15px";				
 				var s = myChart.addSeries("Survival", dimple.plot.bar);
+
+			    s.afterDraw = function (shape, data) {
+			        // Get the shape as a d3 selection
+			        var s = d3.select(shape),
+			          rect = {
+			            x: parseFloat(s.attr("x")),
+			            y: parseFloat(s.attr("y")),
+			            width: parseFloat(s.attr("width")),
+			            height: parseFloat(s.attr("height"))
+			          };
+			        // Only label bars where the text can fit
+			        if (rect.height >= 8) {
+			          // Add a text label for the value
+			          svg.append("text")
+			            // Position in the centre of the shape (vertical position is
+			            // manually set due to cross-browser problems with baseline)
+			            .attr("x", rect.x + rect.width / 2)
+			            .attr("y", rect.y + rect.height / 2 + 3.5)
+			            // Centre align
+			            .style("text-anchor", "middle")
+			            .style("font-size", "10px")
+			            .style("font-family", "sans-serif")
+			            // Make it a little transparent to tone down the black
+			            .style("opacity", 0.6)
+			            // Prevent text cursor on hover and allow tooltips
+			            .style("pointer-events", "none")
+			            // Format the number
+			            .text(d3.format(",.0f")(data.yValue));
+			        }
+			      };
+
 				legend = myChart.addLegend(60, 10, 520, 20, "right");			
 				myChart.draw(1000);
 			});
