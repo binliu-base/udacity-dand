@@ -21,7 +21,7 @@ Use R and apply exploratory data analysis techniques to explore a selected data 
 
 Building an algorithm with machine learning skills to identify Enron Employees who may have committed fraud based on the public Enron financial and email dataset.
 
-[Link to report](/p5/report.md)
+[Link to report](/p5/README.md)
 
 [Link to review](https://review.udacity.com/#!/reviews/798679)
 
