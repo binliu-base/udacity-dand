@@ -34,4 +34,4 @@ Create a data visualization from a data set that tells a story or highlights tre
 
 [Link to review](https://review.udacity.com/#!/reviews/916570)
 
-
+![Udacity Data Analyst Nanodegree certificate](nd002-cn-advanced.png)
